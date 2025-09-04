@@ -69,8 +69,7 @@ class ShellScreen extends StatelessWidget {
     switch (perfil) {
       case 'admin':
         return [
-          const AdminHomeScreen(),
-          const Center(child: Text('Tela de Usuários (Em construção)')),
+          const UserListScreen(),
           const Center(child: Text('Tela de Turmas (Em construção)')),
           const Center(child: Text('Tela de Relatórios (Em construção)')),
         ];

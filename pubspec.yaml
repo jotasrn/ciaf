@@ -37,6 +37,9 @@ dependencies:
   
   # Para decodificar o payload do token JWT no frontend.
   jwt_decode: ^0.3.1
+
+  # ... todas as outras dependências
+  data_table_2: ^2.5.10
   
   # --- Fim dos pacotes que adicionamos ---
 
