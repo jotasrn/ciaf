@@ -16,4 +16,33 @@ class UserManagementCubit extends Cubit<UserManagementState> {
       emit(UserManagementFailure(e.toString()));
     }
   }
+
+  Future<void> createUser(Map<String, dynamic> userData) async {
+    try {
+      await _userRepository.createUser(userData);
+      // Após criar com sucesso, buscamos a lista atualizada
+      fetchUsers();
+    } catch (e) {
+      // Podemos emitir um estado de falha específico para o formulário no futuro
+      print('Erro ao criar usuário: $e');
+    }
+  }
+
+  Future<void> updateUser(String userId, Map<String, dynamic> userData) async {
+    try {
+      await _userRepository.updateUser(userId, userData);
+      fetchUsers();
+    } catch (e) {
+      print('Erro ao atualizar usuário: $e');
+    }
+  }
+
+  Future<void> deleteUser(String userId) async {
+    try {
+      await _userRepository.deleteUser(userId);
+      fetchUsers();
+    } catch (e) {
+      print('Erro ao deletar usuário: $e');
+    }
+  }
 }

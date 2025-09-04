@@ -1,5 +1,3 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/app/theme.dart';
@@ -26,8 +24,8 @@ void main() {
         RepositoryProvider.value(value: userRepository),
       ],
       child: BlocProvider(
-        create: (context) => AuthCubit(context.read<AuthRepository>())
-          ..appStarted(),
+        create: (context) =>
+            AuthCubit(context.read<AuthRepository>())..appStarted(),
         child: const MyApp(),
       ),
     ),
