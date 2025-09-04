@@ -1,0 +1,72 @@
+# Nome do projeto, deve ser em snake_case.
+name: escolinha_futebol_app
+# Uma breve descrição do que o projeto faz.
+description: "Aplicativo de gerenciamento para uma escolinha de esportes, com perfis para admin, professor e aluno."
+# Impede a publicação acidental no pub.dev.
+publish_to: 'none'
+
+# A versão do aplicativo. O primeiro número é a versão (ex: 1.0.0).
+# O número depois do '+' é o número da compilação (build number).
+version: 1.0.0+1
+
+# Define a versão do Dart com a qual o projeto é compatível.
+environment:
+  sdk: '>=3.2.6 <4.0.0'
+
+# A lista de pacotes externos que nosso aplicativo precisa para funcionar.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Pacotes que adicionamos ---
+
+  # Para fazer chamadas de API de forma robusta e com interceptors.
+  dio: ^5.4.3+1
+
+  # Para gerenciamento de estado seguindo o padrão BLoC/Cubit.
+  flutter_bloc: ^8.1.5
+
+  # Para salvar e ler dados simples no dispositivo (nosso token JWT).
+  shared_preferences: ^2.2.3
+
+  # Para formatação de datas, números e internacionalização.
+  intl: ^0.19.0
+
+  # Pacote auxiliar para o flutter_bloc, para comparar objetos de estado facilmente.
+  equatable: ^2.0.5
+  
+  # Para decodificar o payload do token JWT no frontend.
+  jwt_decode: ^0.3.1
+  
+  # --- Fim dos pacotes que adicionamos ---
+
+  # Pacote de ícones padrão do iOS.
+  cupertino_icons: ^1.0.6
+
+# Dependências usadas apenas durante o desenvolvimento (testes, linters, etc.).
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # O linter padrão do Flutter para garantir um código limpo e padronizado.
+  flutter_lints: ^2.0.0
+
+# Configurações específicas do Flutter.
+flutter:
+
+  # Indica que estamos usando o Material Design.
+  uses-material-design: true
+
+  # Seção para declarar assets (imagens, etc.) que o app usará.
+  # Por enquanto está vazia, mas já deixamos o esqueleto pronto para quando
+  # formos adicionar o logo da escolinha.
+  # assets:
+  #   - assets/images/logo.png
+
+  # Seção para declarar fontes customizadas.
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
