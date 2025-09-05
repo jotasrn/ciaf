@@ -7,10 +7,10 @@ class UserManagementCubit extends Cubit<UserManagementState> {
 
   UserManagementCubit(this._userRepository) : super(UserManagementInitial());
 
-  Future<void> fetchUsers() async {
+  Future<void> fetchUsers({Map<String, String>? filters}) async {
     emit(UserManagementLoading());
     try {
-      final users = await _userRepository.getUsers();
+      final users = await _userRepository.getUsers(filters: filters);
       emit(UserManagementSuccess(users));
     } catch (e) {
       emit(UserManagementFailure(e.toString()));

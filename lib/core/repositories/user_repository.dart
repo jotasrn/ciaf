@@ -1,5 +1,3 @@
-// lib/core/repositories/user_repository.dart
-
 import 'package:dio/dio.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
 import 'package:escolinha_futebol_app/core/services/api_service.dart';
@@ -9,9 +7,12 @@ class UserRepository {
 
   UserRepository(this._apiService);
 
-  Future<List<UserModel>> getUsers() async {
+  Future<List<UserModel>> getUsers({Map<String, String>? filters}) async {
     try {
-      final response = await _apiService.dio.get('/usuarios/');
+      final response = await _apiService.dio.get(
+        '/usuarios/',
+        queryParameters: filters,
+      );
       final List<dynamic> data = response.data;
       return data.map((json) => UserModel.fromJson(json)).toList();
     } on DioException catch (e) {
@@ -23,7 +24,7 @@ class UserRepository {
     try {
       // Adiciona campos que o backend espera
       userData['data_nascimento'] =
-          '1900-01-01'; // TODO: Adicionar campo de data no form
+      '1900-01-01'; // TODO: Adicionar campo de data no form
 
       final response = await _apiService.dio.post('/usuarios/', data: userData);
       // O backend não retorna o usuário criado, então retornamos um modelo local
@@ -60,3 +61,4 @@ class UserRepository {
     }
   }
 }
+

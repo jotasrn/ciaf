@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
 
 class UserFormScreen extends StatefulWidget {
-  // Se um usuário for passado, estamos no modo de edição.
-  // Se for nulo, estamos no modo de criação.
   final UserModel? user;
-
   const UserFormScreen({super.key, this.user});
 
   @override
@@ -14,9 +13,9 @@ class UserFormScreen extends StatefulWidget {
 
 class _UserFormScreenState extends State<UserFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _passwordController;
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
   String? _selectedProfile;
   bool get _isEditing => widget.user != null;
 
@@ -39,17 +38,22 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // TODO: Chamar o Cubit para salvar os dados
-      print('Formulário Válido!');
-      print('Nome: ${_nameController.text}');
-      print('Email: ${_emailController.text}');
-      print('Senha: ${_passwordController.text}');
-      print('Perfil: $_selectedProfile');
+      final cubit = context.read<UserManagementCubit>();
+      final userData = {
+        'nome_completo': _nameController.text,
+        'email': _emailController.text,
+        'perfil': _selectedProfile,
+        if (_passwordController.text.isNotEmpty) 'senha': _passwordController.text,
+      };
 
-      // Volta para a tela anterior após submeter
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context,
-            true); // Envia 'true' para indicar que a lista deve ser atualizada
+      if (_isEditing) {
+        cubit.updateUser(widget.user!.id, userData);
+      } else {
+        cubit.createUser(userData);
+      }
+
+      if(Navigator.canPop(context)) {
+        Navigator.pop(context);
       }
     }
   }
@@ -72,31 +76,24 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Nome Completo'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Campo obrigatório' : null,
+                    decoration: const InputDecoration(labelText: 'Nome Completo'),
+                    validator: (value) => value!.trim().isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(labelText: 'E-mail'),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => value!.isEmpty || !value.contains('@')
-                        ? 'E-mail inválido'
-                        : null,
+                    validator: (value) => value!.isEmpty || !value.contains('@') ? 'E-mail inválido' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _passwordController,
                     decoration: InputDecoration(
-                      labelText: _isEditing ? 'Nova Senha (opcional)' : 'Senha',
+                      labelText: _isEditing ? 'Nova Senha (deixe em branco para não alterar)' : 'Senha',
                     ),
                     obscureText: true,
-                    // A senha só é obrigatória na criação
-                    validator: (value) => !_isEditing && value!.isEmpty
-                        ? 'Campo obrigatório'
-                        : null,
+                    validator: (value) => !_isEditing && value!.trim().isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -104,23 +101,21 @@ class _UserFormScreenState extends State<UserFormScreen> {
                     decoration: const InputDecoration(labelText: 'Perfil'),
                     items: ['aluno', 'professor', 'admin']
                         .map((label) => DropdownMenuItem(
-                              value: label,
-                              child: Text(label),
-                            ))
+                      value: label,
+                      child: Text(label[0].toUpperCase() + label.substring(1)),
+                    ))
                         .toList(),
                     onChanged: (value) {
                       setState(() {
                         _selectedProfile = value;
                       });
                     },
-                    validator: (value) =>
-                        value == null ? 'Selecione um perfil' : null,
+                    validator: (value) => value == null ? 'Selecione um perfil' : null,
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: _submitForm,
-                    child: Text(
-                        _isEditing ? 'Salvar Alterações' : 'Criar Usuário'),
+                    child: Text(_isEditing ? 'Salvar Alterações' : 'Criar Usuário'),
                   ),
                 ],
               ),
