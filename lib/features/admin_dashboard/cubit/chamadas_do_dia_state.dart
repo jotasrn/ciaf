@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
 
-// A definição dos estados DEVE estar aqui.
 abstract class ChamadasDoDiaState extends Equatable {
   const ChamadasDoDiaState();
   @override
@@ -9,6 +8,7 @@ abstract class ChamadasDoDiaState extends Equatable {
 }
 
 class ChamadasDoDiaInitial extends ChamadasDoDiaState {}
+
 class ChamadasDoDiaLoading extends ChamadasDoDiaState {}
 
 class ChamadasDoDiaSuccess extends ChamadasDoDiaState {

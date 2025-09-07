@@ -1,4 +1,3 @@
-// lib/features/admin_dashboard/widgets/kpi_card.dart
 import 'package:flutter/material.dart';
 
 class KpiCard extends StatelessWidget {
@@ -31,32 +30,29 @@ class KpiCard extends StatelessWidget {
             children: [
               Icon(icon, size: 40, color: color),
               const SizedBox(width: 16),
-              // ======================= CORREÇÃO AQUI =======================
-              // O Expanded faz com que a coluna de texto ocupe o espaço restante,
-              // evitando que ela "estoure" para fora do card.
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       value,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
                       overflow: TextOverflow.ellipsis, // Evita estouro de texto
                     ),
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                       overflow: TextOverflow.ellipsis, // Evita estouro de texto
                     ),
                   ],
                 ),
               ),
-              // =============================================================
             ],
           ),
         ),

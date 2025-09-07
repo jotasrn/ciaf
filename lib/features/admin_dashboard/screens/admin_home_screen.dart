@@ -5,9 +5,11 @@ import 'package:escolinha_futebol_app/core/repositories/user_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_state.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/screens/category_selection_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/user_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/chamadas_do_dia.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/kpi_card.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/simple_form_dialog.dart';
 import 'package:escolinha_futebol_app/features/shell_dashboard/cubit/navigation_cubit.dart';
 
 class AdminHomeScreen extends StatelessWidget {
@@ -45,7 +47,6 @@ class AdminHomeScreen extends StatelessWidget {
                           icon: Icons.group,
                           color: Colors.blue,
                           onTap: () {
-                            // Navega para a tela de usuários com o filtro de perfil
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (_) => BlocProvider(
                                 create: (context) => UserManagementCubit(
@@ -68,7 +69,6 @@ class AdminHomeScreen extends StatelessWidget {
                           icon: Icons.sports_soccer,
                           color: Colors.orange,
                           onTap: () {
-                            // Isso fará o NavigationCubit mudar para a página de Turmas (índice 1)
                             context.read<NavigationCubit>().selectPage(1);
                           },
                         ),
@@ -81,7 +81,6 @@ class AdminHomeScreen extends StatelessWidget {
                           icon: Icons.money_off,
                           color: Colors.red,
                           onTap: () {
-                            // Navega para a tela de usuários com o filtro de pagamento
                             Navigator.of(context).push(MaterialPageRoute(
                               builder: (_) => BlocProvider(
                                 create: (context) => UserManagementCubit(
@@ -108,7 +107,6 @@ class AdminHomeScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 32),
-            // Seção da Lista de Presença
             Text(
               'Chamadas do Dia',
               style: Theme.of(context).textTheme.titleLarge,
@@ -118,22 +116,40 @@ class AdminHomeScreen extends StatelessWidget {
               height: 300,
               child: ChamadasDoDiaWidget(),
             ),
-
             const SizedBox(height: 32),
-            // Seção de Navegação por Esportes
-            Text(
-              'Navegar por Esportes',
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Navegar por Esportes',
+                    style: Theme.of(context).textTheme.titleLarge),
+                IconButton(
+                  icon: const Icon(Icons.add_circle, color: Colors.green),
+                  onPressed: () async {
+                    final novoEsporte = await showSimpleFormDialog(
+                      context: context,
+                      title: 'Adicionar Novo Esporte',
+                    );
+                    if (novoEsporte != null) {
+                      // TODO: Chamar um SportCubit para criar o esporte
+                      print('Novo esporte a ser criado: $novoEsporte');
+                    }
+                  },
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 16.0,
               runSpacing: 16.0,
               children: [
-                _buildSportCard(context, 'Futebol', Icons.sports_soccer),
-                _buildSportCard(context, 'Futsal', Icons.sports),
-                _buildSportCard(context, 'Vôlei', Icons.sports_volleyball),
-                _buildSportCard(context, 'Natação', Icons.pool),
+                _buildSportCard(context, 'Futebol', Icons.sports_soccer,
+                    '66d8f28c894236b2f7d81b33'),
+                _buildSportCard(context, 'Futsal', Icons.sports,
+                    '66d8f28c894236b2f7d81b34'),
+                _buildSportCard(context, 'Vôlei', Icons.sports_volleyball,
+                    '66d8f28c894236b2f7d81b35'),
+                _buildSportCard(
+                    context, 'Natação', Icons.pool, '66d8f28c894236b2f7d81b36'),
               ],
             )
           ],
@@ -142,7 +158,8 @@ class AdminHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSportCard(BuildContext context, String title, IconData icon) {
+  Widget _buildSportCard(
+      BuildContext context, String title, IconData icon, String esporteId) {
     return SizedBox(
       width: 120,
       height: 120,
@@ -152,7 +169,12 @@ class AdminHomeScreen extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            print('Clicou em $title');
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => CategorySelectionScreen(
+                esporteId: esporteId,
+                esporteNome: title,
+              ),
+            ));
           },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -171,4 +193,3 @@ class AdminHomeScreen extends StatelessWidget {
     );
   }
 }
-

@@ -32,5 +32,13 @@ class AulaResumoModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, data, status, turmaNome, esporteNome, totalAlunosNaTurma, totalPresentes];
+  List<Object?> get props => [
+        id,
+        data,
+        status,
+        turmaNome,
+        esporteNome,
+        totalAlunosNaTurma,
+        totalPresentes
+      ];
 }

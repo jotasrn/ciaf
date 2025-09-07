@@ -13,10 +13,8 @@ class ChamadasDoDiaWidget extends StatelessWidget {
     return BlocProvider(
       create: (context) => ChamadasDoDiaCubit(
         RepositoryProvider.of<AulaRepository>(context),
-      )..fetchChamadas(),
+      )..fetchChamadas(), // Busca as chamadas do dia ao iniciar
       child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2.0,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -24,9 +22,11 @@ class ChamadasDoDiaWidget extends StatelessWidget {
               // Cabeçalho com o título e os filtros
               BlocBuilder<ChamadasDoDiaCubit, ChamadasDoDiaState>(
                 builder: (context, state) {
-                  String dataExibida = DateFormat('dd MMMM yyyy', 'pt_BR').format(DateTime.now());
+                  String dataExibida =
+                      DateFormat('dd/MM/yyyy').format(DateTime.now());
                   if (state is ChamadasDoDiaSuccess) {
-                    dataExibida = DateFormat('dd MMMM yyyy', 'pt_BR').format(state.selectedDate);
+                    dataExibida =
+                        DateFormat('dd/MM/yyyy').format(state.selectedDate);
                   }
 
                   return Row(
@@ -35,35 +35,35 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Chamadas do Dia", style: Theme.of(context).textTheme.titleLarge),
-                          const SizedBox(height: 4),
-                          Text(dataExibida, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600])),
+                          Text("Chamadas do Dia",
+                              style: Theme.of(context).textTheme.titleLarge),
+                          Text(dataExibida,
+                              style: Theme.of(context).textTheme.bodySmall),
                         ],
                       ),
-                      Builder(builder: (buttonContext) {
-                        return IconButton(
-                          icon: const Icon(Icons.calendar_today, color: Colors.grey),
-                          tooltip: 'Selecionar outra data',
-                          onPressed: () async {
-                            final cubit = buttonContext.read<ChamadasDoDiaCubit>();
-                            final dataAtual = (cubit.state is ChamadasDoDiaSuccess)
-                                ? (cubit.state as ChamadasDoDiaSuccess).selectedDate
-                                : DateTime.now();
-
-                            final novaData = await showDatePicker(
-                              context: buttonContext,
-                              initialDate: dataAtual,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2030),
-                              locale: const Locale('pt', 'BR'),
-                            );
-
-                            if (novaData != null) {
-                              cubit.fetchChamadas(data: novaData);
-                            }
-                          },
-                        );
-                      }),
+                      Builder(
+                        builder: (buttonContext) {
+                          return IconButton(
+                            icon: const Icon(Icons.calendar_today,
+                                color: Colors.grey),
+                            onPressed: () async {
+                              final cubit =
+                                  buttonContext.read<ChamadasDoDiaCubit>();
+                              final novaData = await showDatePicker(
+                                context: buttonContext,
+                                initialDate: (state is ChamadasDoDiaSuccess)
+                                    ? state.selectedDate
+                                    : DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2030),
+                              );
+                              if (novaData != null) {
+                                cubit.fetchChamadas(data: novaData);
+                              }
+                            },
+                          );
+                        },
+                      ),
                     ],
                   );
                 },
@@ -73,7 +73,8 @@ class ChamadasDoDiaWidget extends StatelessWidget {
               Expanded(
                 child: BlocBuilder<ChamadasDoDiaCubit, ChamadasDoDiaState>(
                   builder: (context, state) {
-                    if (state is ChamadasDoDiaLoading || state is ChamadasDoDiaInitial) {
+                    if (state is ChamadasDoDiaLoading ||
+                        state is ChamadasDoDiaInitial) {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (state is ChamadasDoDiaFailure) {
@@ -81,10 +82,13 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                     }
                     if (state is ChamadasDoDiaSuccess) {
                       if (state.aulas.isEmpty) {
-                        return const Center(child: Text('Nenhuma aula agendada para esta data.'));
+                        return const Center(
+                            child:
+                                Text('Nenhuma aula agendada para esta data.'));
                       }
-                      // Removido shrinkWrap e physics
                       return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
                         itemCount: state.aulas.length,
                         itemBuilder: (context, index) {
                           final aula = state.aulas[index];
@@ -93,8 +97,11 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                               : 0.0;
 
                           return ListTile(
-                            title: Text('${aula.turmaNome} (${aula.esporteNome})'),
-                            subtitle: Text('Presença: ${aula.totalPresentes} de ${aula.totalAlunosNaTurma}'),
+                            title:
+                                Text('${aula.turmaNome} (${aula.esporteNome})'),
+                            subtitle: Text(
+                              'Presença: ${aula.totalPresentes} de ${aula.totalAlunosNaTurma}',
+                            ),
                             trailing: SizedBox(
                               width: 100,
                               child: Row(
@@ -120,7 +127,7 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                             },
                           );
                         },
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) => const Divider(),
                       );
                     }
                     return const SizedBox.shrink();

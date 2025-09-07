@@ -1,5 +1,3 @@
-// lib/core/repositories/aula_repository.dart
-
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
@@ -14,7 +12,8 @@ class AulaRepository {
     final dataString = formatoData.format(data);
 
     try {
-      final response = await _apiService.dio.get('/aulas/por-data', queryParameters: {'data': dataString});
+      final response = await _apiService.dio
+          .get('/aulas/por-data', queryParameters: {'data': dataString});
       final List<dynamic> data = response.data;
       // Mapeia a lista de JSON para a lista de AulaResumoModel
       return data.map((json) => AulaResumoModel.fromJson(json)).toList();

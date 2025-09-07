@@ -18,6 +18,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_localizations: # Suporte para localização (idiomas)
+    sdk: flutter
+
   # --- Pacotes que adicionamos ---
 
   # Para fazer chamadas de API de forma robusta e com interceptors.
@@ -28,9 +31,6 @@ dependencies:
 
   # Para salvar e ler dados simples no dispositivo (nosso token JWT).
   shared_preferences: ^2.2.3
-
-  # Para formatação de datas, números e internacionalização.
-  intl: ^0.19.0
 
   # Pacote auxiliar para o flutter_bloc, para comparar objetos de estado facilmente.
   equatable: ^2.0.5
@@ -45,6 +45,8 @@ dependencies:
 
   # Pacote de ícones padrão do iOS.
   cupertino_icons: ^1.0.6
+  intl: ^0.20.2
+
 
 # Dependências usadas apenas durante o desenvolvimento (testes, linters, etc.).
 dev_dependencies:
