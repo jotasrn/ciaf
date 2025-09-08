@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:escolinha_futebol_app/core/models/sport_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/dashboard_repository.dart';
+import 'package:escolinha_futebol_app/core/repositories/sport_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/user_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_state.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/sport_cubit.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/sport_state.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/category_selection_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/user_list_screen.dart';
@@ -64,7 +68,7 @@ class AdminHomeScreen extends StatelessWidget {
                       SizedBox(
                         width: 220,
                         child: KpiCard(
-                          title: 'Total de Turmas',
+                          title: 'Turmas',
                           value: state.totalTurmas.toString(),
                           icon: Icons.sports_soccer,
                           color: Colors.orange,
@@ -117,49 +121,77 @@ class AdminHomeScreen extends StatelessWidget {
               child: ChamadasDoDiaWidget(),
             ),
             const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Navegar por Esportes',
-                    style: Theme.of(context).textTheme.titleLarge),
-                IconButton(
-                  icon: const Icon(Icons.add_circle, color: Colors.green),
-                  onPressed: () async {
-                    final novoEsporte = await showSimpleFormDialog(
-                      context: context,
-                      title: 'Adicionar Novo Esporte',
-                    );
-                    if (novoEsporte != null) {
-                      // TODO: Chamar um SportCubit para criar o esporte
-                      print('Novo esporte a ser criado: $novoEsporte');
-                    }
-                  },
-                ),
-              ],
+            BlocProvider(
+              create: (context) => SportCubit(
+                RepositoryProvider.of<SportRepository>(context),
+              )..fetchSports(),
+              child: Builder(builder: (context) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Navegar por Esportes',
+                            style: Theme.of(context).textTheme.titleLarge),
+                        IconButton(
+                          icon:
+                          const Icon(Icons.add_circle, color: Colors.green),
+                          onPressed: () async {
+                            final novoEsporte = await showSimpleFormDialog(
+                              context: context,
+                              title: 'Adicionar Novo Esporte',
+                            );
+                            if (novoEsporte != null && novoEsporte.isNotEmpty) {
+                              context
+                                  .read<SportCubit>()
+                                  .createSport(nome: novoEsporte);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    BlocBuilder<SportCubit, SportState>(
+                      builder: (context, state) {
+                        if (state is SportLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (state is SportFailure) {
+                          return Center(child: Text(state.message));
+                        }
+                        if (state is SportLoadSuccess) {
+                          return Wrap(
+                            spacing: 16.0,
+                            runSpacing: 16.0,
+                            children: state.sports.map((sport) {
+                              return _buildSportCard(context, sport);
+                            }).toList(),
+                          );
+                        }
+                        return const Text('Nenhum esporte encontrado.');
+                      },
+                    ),
+                  ],
+                );
+              }),
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 16.0,
-              runSpacing: 16.0,
-              children: [
-                _buildSportCard(context, 'Futebol', Icons.sports_soccer,
-                    '66d8f28c894236b2f7d81b33'),
-                _buildSportCard(context, 'Futsal', Icons.sports,
-                    '66d8f28c894236b2f7d81b34'),
-                _buildSportCard(context, 'Vôlei', Icons.sports_volleyball,
-                    '66d8f28c894236b2f7d81b35'),
-                _buildSportCard(
-                    context, 'Natação', Icons.pool, '66d8f28c894236b2f7d81b36'),
-              ],
-            )
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSportCard(
-      BuildContext context, String title, IconData icon, String esporteId) {
+  Widget _buildSportCard(BuildContext context, SportModel sport) {
+    IconData iconData = Icons.sports;
+    if (sport.nome.toLowerCase().contains('futebol')) {
+      iconData = Icons.sports_soccer;
+    } else if (sport.nome.toLowerCase().contains('vôlei')) {
+      iconData = Icons.sports_volleyball;
+    } else if (sport.nome.toLowerCase().contains('natação')) {
+      iconData = Icons.pool;
+    }
+
     return SizedBox(
       width: 120,
       height: 120,
@@ -171,18 +203,18 @@ class AdminHomeScreen extends StatelessWidget {
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => CategorySelectionScreen(
-                esporteId: esporteId,
-                esporteNome: title,
+                esporteId: sport.id,
+                esporteNome: sport.nome,
               ),
             ));
           },
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Colors.green, size: 40),
+              Icon(iconData, color: Colors.green, size: 40),
               const SizedBox(height: 8),
               Text(
-                title,
+                sport.nome,
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),
@@ -193,3 +225,4 @@ class AdminHomeScreen extends StatelessWidget {
     );
   }
 }
+

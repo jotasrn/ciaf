@@ -60,5 +60,13 @@ class UserRepository {
       throw Exception(message);
     }
   }
+
+  Future<List<UserModel>> getProfessores() async {
+    return getUsers(filters: {'perfil': 'professor'});
+  }
+
+  Future<List<UserModel>> getAlunos() async {
+    return getUsers(filters: {'perfil': 'aluno'});
+  }
 }
 

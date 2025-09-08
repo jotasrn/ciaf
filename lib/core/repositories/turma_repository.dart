@@ -47,4 +47,44 @@ class TurmaRepository {
       throw Exception('Falha ao buscar turmas.');
     }
   }
+
+  Future<void> updateCategoria({required String id, required String nome}) async {
+    try {
+      await _apiService.dio.put('/categorias/$id', data: {'nome': nome});
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao atualizar categoria.');
+    }
+  }
+
+  Future<void> deleteCategoria({required String id}) async {
+    try {
+      await _apiService.dio.delete('/categorias/$id');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao deletar categoria.');
+    }
+  }
+
+  Future<void> deleteTurma({required String id}) async {
+    try {
+      await _apiService.dio.delete('/turmas/$id');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao deletar turma.');
+    }
+  }
+
+  Future<void> createTurma(Map<String, dynamic> turmaData) async {
+    try {
+      await _apiService.dio.post('/turmas/', data: turmaData);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao criar turma.');
+    }
+  }
+
+  Future<void> updateTurma(String id, Map<String, dynamic> turmaData) async {
+    try {
+      await _apiService.dio.put('/turmas/$id', data: turmaData);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao atualizar turma.');
+    }
+  }
 }

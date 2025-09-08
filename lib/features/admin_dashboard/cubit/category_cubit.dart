@@ -56,4 +56,29 @@ class CategoryCubit extends Cubit<CategoryState> {
       print('Erro ao criar categoria: $e');
     }
   }
+
+  Future<void> updateCategoria({
+    required String id,
+    required String nome,
+    required String esporteId,
+  }) async {
+    try {
+      await _turmaRepository.updateCategoria(id: id, nome: nome);
+      fetchCategorias(esporteId); // Recarrega a lista
+    } catch (e) {
+      print('Erro ao atualizar categoria: $e');
+    }
+  }
+
+  Future<void> deleteCategoria({
+    required String id,
+    required String esporteId,
+  }) async {
+    try {
+      await _turmaRepository.deleteCategoria(id: id);
+      fetchCategorias(esporteId); // Recarrega a lista
+    } catch (e) {
+      print('Erro ao deletar categoria: $e');
+    }
+  }
 }

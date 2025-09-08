@@ -41,7 +41,7 @@ dependencies:
   # ... todas as outras dependências
   data_table_2: ^2.5.10
   
-  # --- Fim dos pacotes que adicionamos ---
+  multi_select_flutter: ^4.1.3
 
   # Pacote de ícones padrão do iOS.
   cupertino_icons: ^1.0.6

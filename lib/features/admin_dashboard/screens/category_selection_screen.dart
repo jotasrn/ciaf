@@ -36,9 +36,9 @@ class CategorySelectionScreen extends StatelessWidget {
                   );
                   if (novaCategoria != null && novaCategoria.isNotEmpty) {
                     context.read<CategoryCubit>().createCategoria(
-                          nome: novaCategoria,
-                          esporteId: esporteId,
-                        );
+                      nome: novaCategoria,
+                      esporteId: esporteId,
+                    );
                   }
                 },
               );
@@ -57,7 +57,7 @@ class CategorySelectionScreen extends StatelessWidget {
               if (state.categorias.isEmpty) {
                 return const Center(
                   child:
-                      Text('Nenhuma categoria encontrada para este esporte.'),
+                  Text('Nenhuma categoria encontrada para este esporte.'),
                 );
               }
               return ListView.builder(
@@ -66,22 +66,66 @@ class CategorySelectionScreen extends StatelessWidget {
                   final categoria = state.categorias[index];
                   return ListTile(
                     title: Text(categoria.nome),
-                    trailing: IconButton(
-                      icon:
-                          const Icon(Icons.edit, size: 20, color: Colors.grey),
-                      tooltip: 'Editar Categoria',
-                      onPressed: () async {
-                        final categoriaEditada = await showSimpleFormDialog(
-                          context: context,
-                          title: 'Editar Categoria',
-                          initialValue: categoria.nome,
-                        );
-                        if (categoriaEditada != null) {
-                          // TODO: Chamar o CategoryCubit para editar a categoria
-                          print(
-                              'Editar categoria ${categoria.id} para: $categoriaEditada');
-                        }
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit,
+                              size: 20, color: Colors.grey),
+                          tooltip: 'Editar Categoria',
+                          onPressed: () async {
+                            final categoriaEditada =
+                            await showSimpleFormDialog(
+                              context: context,
+                              title: 'Editar Categoria',
+                              initialValue: categoria.nome,
+                            );
+                            if (categoriaEditada != null &&
+                                categoriaEditada.isNotEmpty) {
+                              context.read<CategoryCubit>().updateCategoria(
+                                id: categoria.id,
+                                nome: categoriaEditada,
+                                esporteId: esporteId,
+                              );
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.delete,
+                              size: 20, color: Colors.red.shade700),
+                          tooltip: 'Deletar Categoria',
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text('Confirmar Exclusão'),
+                                content: Text(
+                                    'Tem certeza que deseja deletar a categoria ${categoria.nome}?'),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('Cancelar'),
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(),
+                                  ),
+                                  TextButton(
+                                    child: const Text('Deletar',
+                                        style: TextStyle(color: Colors.red)),
+                                    onPressed: () {
+                                      context
+                                          .read<CategoryCubit>()
+                                          .deleteCategoria(
+                                        id: categoria.id,
+                                        esporteId: esporteId,
+                                      );
+                                      Navigator.of(dialogContext).pop();
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
@@ -103,3 +147,4 @@ class CategorySelectionScreen extends StatelessWidget {
     );
   }
 }
+
