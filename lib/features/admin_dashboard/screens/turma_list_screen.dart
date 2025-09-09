@@ -5,36 +5,50 @@ import 'package:escolinha_futebol_app/core/models/turma_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_state.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_detail_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_form_screen.dart';
 
 class TurmaListScreen extends StatelessWidget {
-  final String esporteId;
-  final String esporteNome;
-  final String categoria;
+  // Parâmetros agora são opcionais para permitir listagem geral ou filtrada
+  final String? esporteId;
+  final String? esporteNome;
+  final String? categoria;
 
   const TurmaListScreen({
     super.key,
-    required this.esporteId,
-    required this.esporteNome,
-    required this.categoria,
+    this.esporteId,
+    this.esporteNome,
+    this.categoria,
   });
 
   @override
   Widget build(BuildContext context) {
+    // A tela agora precisa do seu próprio BlocProvider para ser reutilizável
     return BlocProvider(
-      create: (context) => TurmaManagementCubit(
-        RepositoryProvider.of<TurmaRepository>(context),
-      )..fetchTurmas(esporteId: esporteId, categoria: categoria),
+      create: (context) {
+        final cubit = TurmaManagementCubit(
+          RepositoryProvider.of<TurmaRepository>(context),
+        );
+        // Decide qual método de busca chamar com base nos filtros recebidos
+        if (esporteId != null && categoria != null) {
+          cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
+        } else {
+          cubit.fetchTodasTurmas();
+        }
+        return cubit;
+      },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('$esporteNome - $categoria'),
+          // O título é dinâmico: mostra os filtros ou um título geral
+          title: Text(esporteNome != null
+              ? '$esporteNome - $categoria'
+              : 'Gerenciamento de Turmas'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: BlocBuilder<TurmaManagementCubit, TurmaManagementState>(
             builder: (context, state) {
-              if (state is TurmaManagementLoading ||
-                  state is TurmaManagementInitial) {
+              if (state is TurmaManagementLoading || state is TurmaManagementInitial) {
                 return const Center(child: CircularProgressIndicator());
               }
               if (state is TurmaManagementFailure) {
@@ -43,21 +57,22 @@ class TurmaListScreen extends StatelessWidget {
               if (state is TurmaManagementSuccess) {
                 if (state.turmas.isEmpty) {
                   return const Center(
-                    child:
-                    Text('Nenhuma turma encontrada para esta categoria.'),
+                    child: Text('Nenhuma turma encontrada.'),
                   );
                 }
+                // A fonte de dados agora recebe os filtros para saber como se comportar
                 return PaginatedDataTable2(
                   columns: const [
                     DataColumn(label: Text('Nome da Turma')),
+                    DataColumn(label: Text('Esporte')),
                     DataColumn(label: Text('Categoria')),
+                    DataColumn(label: Text('Professor')),
                     DataColumn(label: Text('Ações')),
                   ],
-                  source: TurmaDataSource(
-                      state.turmas, context, esporteId, categoria),
+                  source: TurmaDataSource(state.turmas, context, esporteId, categoria),
                   columnSpacing: 12,
                   horizontalMargin: 12,
-                  minWidth: 600,
+                  minWidth: 800,
                   showCheckboxColumn: false,
                 );
               }
@@ -65,7 +80,9 @@ class TurmaListScreen extends StatelessWidget {
             },
           ),
         ),
-        floatingActionButton: Builder(
+        // O botão de adicionar só aparece na visualização filtrada
+        floatingActionButton: (esporteId != null && categoria != null)
+            ? Builder(
           builder: (buttonContext) {
             return FloatingActionButton(
               onPressed: () {
@@ -74,7 +91,7 @@ class TurmaListScreen extends StatelessWidget {
                     builder: (_) => BlocProvider.value(
                       value: buttonContext.read<TurmaManagementCubit>(),
                       child: TurmaFormScreen(
-                          esporteId: esporteId, categoria: categoria),
+                          esporteId: esporteId!, categoria: categoria!),
                     ),
                   ),
                 );
@@ -82,18 +99,18 @@ class TurmaListScreen extends StatelessWidget {
               child: const Icon(Icons.add),
             );
           },
-        ),
+        )
+            : null, // Não mostra o botão na lista geral
       ),
     );
   }
 }
 
-// Fonte de dados para a tabela de turmas
 class TurmaDataSource extends DataTableSource {
   final List<TurmaModel> turmas;
   final BuildContext context;
-  final String esporteId;
-  final String categoria;
+  final String? esporteId;
+  final String? categoria;
 
   TurmaDataSource(this.turmas, this.context, this.esporteId, this.categoria);
 
@@ -102,9 +119,21 @@ class TurmaDataSource extends DataTableSource {
     final turma = turmas[index];
     return DataRow2.byIndex(
       index: index,
+      onSelectChanged: (isSelected) {
+        if (isSelected ?? false) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => TurmaDetailScreen(
+              turmaId: turma.id,
+              turmaNome: turma.nome,
+            ),
+          ));
+        }
+      },
       cells: [
         DataCell(Text(turma.nome)),
+        DataCell(Text(turma.esporte.nome)),
         DataCell(Text(turma.categoria)),
+        DataCell(Text(turma.professor.nome)),
         DataCell(
           Row(
             children: [
@@ -112,15 +141,25 @@ class TurmaDataSource extends DataTableSource {
                 return IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () {
-                    Navigator.of(cellContext).push(MaterialPageRoute(
-                      builder: (_) => BlocProvider.value(
-                        value: context.read<TurmaManagementCubit>(),
-                        child: TurmaFormScreen(
-                            turma: turma,
-                            esporteId: esporteId,
-                            categoria: categoria),
+                    Navigator.of(cellContext).push(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<TurmaManagementCubit>(),
+                          child: TurmaFormScreen(
+                              turma: turma,
+                              esporteId: turma.esporte.id,
+                              categoria: turma.categoria),
+                        ),
                       ),
-                    ));
+                    ).then((_) {
+                      // Decide qual lista recarregar com base nos filtros
+                      if (esporteId != null && categoria != null) {
+                        context.read<TurmaManagementCubit>().fetchTurmas(
+                            esporteId: esporteId!, categoria: categoria!);
+                      } else {
+                        context.read<TurmaManagementCubit>().fetchTodasTurmas();
+                      }
+                    });
                   },
                 );
               }),
@@ -133,7 +172,7 @@ class TurmaDataSource extends DataTableSource {
                       builder: (dialogContext) => AlertDialog(
                         title: const Text('Confirmar Exclusão'),
                         content: Text(
-                            'Tem certeza que deseja deletar a turma ${turma.nome}?'),
+                            'Tem certeza que deseja deletar a turma "${turma.nome}"?'),
                         actions: [
                           TextButton(
                             child: const Text('Cancelar'),
@@ -143,11 +182,16 @@ class TurmaDataSource extends DataTableSource {
                             child: const Text('Deletar',
                                 style: TextStyle(color: Colors.red)),
                             onPressed: () {
-                              context.read<TurmaManagementCubit>().deleteTurma(
-                                id: turma.id,
-                                esporteId: esporteId,
-                                categoria: categoria,
-                              );
+                              // Decide qual método de delete chamar
+                              if (esporteId != null && categoria != null) {
+                                context.read<TurmaManagementCubit>().deleteTurma(
+                                  id: turma.id,
+                                  esporteId: esporteId!,
+                                  categoria: categoria!,
+                                );
+                              } else {
+                                context.read<TurmaManagementCubit>().deleteTurmaById(turma.id);
+                              }
                               Navigator.of(dialogContext).pop();
                             },
                           ),

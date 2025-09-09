@@ -1,36 +1,12 @@
+// lib/features/admin_dashboard/cubit/category_cubit.dart
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:escolinha_futebol_app/core/models/category_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/category_state.dart';
 
-// Estados
-abstract class CategoryState extends Equatable {
-  const CategoryState();
-  @override
-  List<Object> get props => [];
-}
-
-class CategoryInitial extends CategoryState {}
-
-class CategoryLoading extends CategoryState {}
-
-class CategorySuccess extends CategoryState {
-  final List<CategoryModel> categorias;
-  const CategorySuccess(this.categorias);
-  @override
-  List<Object> get props => [categorias];
-}
-
-class CategoryFailure extends CategoryState {
-  final String message;
-  const CategoryFailure(this.message);
-  @override
-  List<Object> get props => [message];
-}
-
-// Cubit
 class CategoryCubit extends Cubit<CategoryState> {
   final TurmaRepository _turmaRepository;
+
   CategoryCubit(this._turmaRepository) : super(CategoryInitial());
 
   Future<void> fetchCategorias(String esporteId) async {
@@ -47,13 +23,14 @@ class CategoryCubit extends Cubit<CategoryState> {
     required String nome,
     required String esporteId,
   }) async {
+    // Não emite 'loading' para não piscar a tela toda, a UI pode mostrar um loader no botão
     try {
       await _turmaRepository.createCategoria(nome: nome, esporteId: esporteId);
       // Após criar, busca a lista atualizada para a UI refletir a mudança
-      fetchCategorias(esporteId);
+      await fetchCategorias(esporteId);
     } catch (e) {
-      // Poderíamos emitir um estado de erro aqui para mostrar na UI
-      print('Erro ao criar categoria: $e');
+      // Emite um estado de falha para a UI poder mostrar uma SnackBar
+      emit(CategoryFailure(e.toString()));
     }
   }
 
@@ -64,9 +41,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   }) async {
     try {
       await _turmaRepository.updateCategoria(id: id, nome: nome);
-      fetchCategorias(esporteId); // Recarrega a lista
+      await fetchCategorias(esporteId); // Recarrega a lista
     } catch (e) {
-      print('Erro ao atualizar categoria: $e');
+      emit(CategoryFailure(e.toString()));
     }
   }
 
@@ -76,9 +53,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   }) async {
     try {
       await _turmaRepository.deleteCategoria(id: id);
-      fetchCategorias(esporteId); // Recarrega a lista
+      await fetchCategorias(esporteId); // Recarrega a lista
     } catch (e) {
-      print('Erro ao deletar categoria: $e');
+      emit(CategoryFailure(e.toString()));
     }
   }
 }

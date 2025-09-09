@@ -32,7 +32,27 @@ class TurmaManagementCubit extends Cubit<TurmaManagementState> {
       await _turmaRepository.deleteTurma(id: id);
       fetchTurmas(esporteId: esporteId, categoria: categoria);
     } catch (e) {
-      print('Erro ao deletar turma: $e');
+      emit(TurmaManagementFailure(e.toString()));
+    }
+  }
+
+  Future<void> fetchTodasTurmas() async {
+    emit(TurmaManagementLoading());
+    try {
+      final turmas = await _turmaRepository.getTodasTurmas();
+      emit(TurmaManagementSuccess(turmas));
+    } catch (e) {
+      emit(TurmaManagementFailure(e.toString()));
+    }
+  }
+
+  Future<void> deleteTurmaById(String id) async {
+    try {
+      await _turmaRepository.deleteTurma(id: id);
+      // Recarrega a lista completa
+      fetchTodasTurmas();
+    } catch (e) {
+      emit(TurmaManagementFailure(e.toString()));
     }
   }
 }

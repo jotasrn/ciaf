@@ -75,7 +75,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
   List<String> _selectedAlunosIds = [];
   List<Horario> _horarios = [];
   bool get _isEditing => widget.turma != null;
-  bool _fieldsInitialized = false; // Flag para controlar a inicialização
+  bool _fieldsInitialized = false;
 
   @override
   void initState() {
@@ -84,29 +84,24 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
   }
 
   void _initializeFields(TurmaModel turma) {
-    // Agora acessamos as propriedades do objeto TurmaModel diretamente
     _selectedProfessorId = turma.professor.id;
-    _selectedAlunosIds = turma.alunos.map((aluno) => aluno.id).toList();
-    _horarios = turma.horarios.map((horarioJson) {
-      // Função para converter a string de hora (ex: "09:30") para TimeOfDay
+    _selectedAlunosIds = turma.alunos.map((a) => a.id).toList();
+    _horarios = turma.horarios.map((h) {
       TimeOfDay? parseTime(String? timeStr) {
         if (timeStr == null || timeStr.isEmpty) return null;
         try {
-          final format = DateFormat.Hm(); // Formato HH:mm
-          final dt = format.parse(timeStr);
-          return TimeOfDay.fromDateTime(dt);
+          return TimeOfDay.fromDateTime(DateFormat.Hm().parse(timeStr));
         } catch (e) {
-          return null; // Retorna nulo se o formato for inválido
+          return null;
         }
       }
 
       return Horario(
-        diaSemana: horarioJson['dia_semana'],
-        horaInicio: parseTime(horarioJson['hora_inicio']),
-        horaFim: parseTime(horarioJson['hora_fim']),
+        diaSemana: h['dia_semana'],
+        horaInicio: parseTime(h['hora_inicio']),
+        horaFim: parseTime(h['hora_fim']),
       );
     }).toList();
-
     _fieldsInitialized = true;
   }
 
@@ -171,7 +166,9 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is TurmaFormDataReady) {
-            if (_isEditing && !_fieldsInitialized && state.turmaExistente != null) {
+            if (_isEditing &&
+                !_fieldsInitialized &&
+                state.turmaExistente != null) {
               _initializeFields(state.turmaExistente!);
             }
             return _buildForm(state.professores, state.alunos);
@@ -187,6 +184,23 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
   }
 
   Widget _buildForm(List<UserModel> professores, List<UserModel> alunos) {
+    if (_isEditing && _selectedProfessorId != null) {
+      bool professorJaNaLista =
+      professores.any((p) => p.id == _selectedProfessorId);
+      if (!professorJaNaLista && widget.turma != null) {
+        final professorDaTurma = widget.turma!.professor;
+        professores.insert(
+            0,
+            UserModel(
+                id: professorDaTurma.id,
+                nome: '${professorDaTurma.nome} (Inativo)',
+                email: '',
+                perfil: 'professor',
+                ativo: false,
+                statusPagamento: const StatusPagamento(status: 'N/A')));
+      }
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Form(
@@ -328,3 +342,4 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
     );
   }
 }
+

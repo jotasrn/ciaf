@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/category_cubit.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/category_state.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/simple_form_dialog.dart';
 

@@ -56,13 +56,12 @@ class SideMenuWidget extends StatelessWidget {
           (title: 'Dashboard', icon: Icons.dashboard, index: 0),
           (title: 'Usuários', icon: Icons.group, index: 1),
           (title: 'Turmas', icon: Icons.sports_soccer, index: 2),
-          (title: 'Relatórios', icon: Icons.bar_chart, index: 3),
+          (title: 'Esportes', icon: Icons.emoji_events, index: 3),
         ];
         break;
       case 'professor':
         items = [
           (title: 'Minhas Turmas', icon: Icons.list_alt, index: 0),
-          (title: 'Fazer Chamada', icon: Icons.check_circle_outline, index: 1),
         ];
         break;
       case 'aluno':
@@ -90,3 +89,4 @@ class SideMenuWidget extends StatelessWidget {
         .toList();
   }
 }
+

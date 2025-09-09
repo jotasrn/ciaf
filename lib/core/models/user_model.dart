@@ -2,12 +2,12 @@ import 'package:equatable/equatable.dart';
 
 class StatusPagamento extends Equatable {
   final String status;
-  // Adicione outros campos como data de vencimento se precisar
-
   const StatusPagamento({required this.status});
 
   factory StatusPagamento.fromJson(Map<String, dynamic>? json) {
+    // Se o objeto inteiro for nulo, retorna um status padrão
     if (json == null) return const StatusPagamento(status: 'pendente');
+    // Se o campo status for nulo, retorna um status padrão
     return StatusPagamento(status: json['status'] ?? 'pendente');
   }
 
@@ -34,10 +34,10 @@ class UserModel extends Equatable {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['_id'],
-      nome: json['nome_completo'],
-      email: json['email'],
-      perfil: json['perfil'],
+      id: (json['_id'] is String ? json['_id'] : json['_id']['\$oid']) ?? '',
+      nome: json['nome_completo'] ?? 'Nome não informado',
+      email: json['email'] ?? 'E-mail não informado',
+      perfil: json['perfil'] ?? 'indefinido',
       ativo: json['ativo'] ?? true,
       statusPagamento: StatusPagamento.fromJson(json['status_pagamento']),
     );
