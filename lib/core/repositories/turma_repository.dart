@@ -91,6 +91,7 @@ class TurmaRepository {
   Future<TurmaModel> getTurmaById(String turmaId) async {
     try {
       final response = await _apiService.dio.get('/turmas/$turmaId');
+      print('DEBUG: JSON recebido para detalhes da turma: ${response.data}');
       return TurmaModel.fromJson(response.data);
     } on DioException {
       throw Exception('Falha ao buscar detalhes da turma.');

@@ -7,7 +7,7 @@ class ApiService {
 
   // Para testar via web use 'http://127.0.0.1:5000/api'
   // Para testar via emulador Android use 'http://10.0.2.2:5000/api'
-  static const String _baseUrl = 'http://127.0.0.1:5000/api';
+  static const String _baseUrl = 'http://192.168.1.2:5000/api';
   // static const String _baseUrl = 'http://10.10.3.165:5000/api';
 
   ApiService(this._localStorageService)

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
 import 'package:escolinha_futebol_app/core/models/aluno_chamada_model.dart';
 import 'package:escolinha_futebol_app/core/services/api_service.dart';
+import 'package:escolinha_futebol_app/core/models/aula_detail_model.dart';
 
 class AulaRepository {
   final ApiService _apiService;
@@ -33,13 +34,19 @@ class AulaRepository {
     }
   }
 
-  Future<List<AlunoChamadaModel>> getAlunosDaAula(String aulaId) async {
+  Future<AulaDetailModel> getAulaDetails(String aulaId) async {
     try {
       final response = await _apiService.dio.get('/aulas/$aulaId/detalhes');
-      final List<dynamic> alunosJson = response.data['alunos'];
-      return alunosJson.map((json) => AlunoChamadaModel.fromJson(json)).toList();
+      final responseData = response.data as Map<String, dynamic>;
+
+      final List<dynamic> alunosJson = responseData['alunos'];
+      final alunos = alunosJson.map((json) => AlunoChamadaModel.fromJson(json)).toList();
+
+      final data = DateTime.parse(responseData['data']['\$date']);
+
+      return AulaDetailModel(data: data, alunos: alunos);
     } on DioException {
-      throw Exception('Falha ao buscar alunos da aula.');
+      throw Exception('Falha ao buscar detalhes da aula.');
     }
   }
 

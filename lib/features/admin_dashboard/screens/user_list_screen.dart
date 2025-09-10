@@ -2,25 +2,30 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
+import 'package:escolinha_futebol_app/core/repositories/user_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_state.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/user_form_screen.dart';
 
-class UserListScreen extends StatefulWidget {
+class UserListScreen extends StatelessWidget {
   final Map<String, String>? initialFilters;
 
   const UserListScreen({super.key, this.initialFilters});
 
   @override
-  State<UserListScreen> createState() => _UserListScreenState();
+  Widget build(BuildContext context) {
+    // A tela agora cria seu próprio provider, tornando-a independente
+    return BlocProvider(
+      create: (context) => UserManagementCubit(
+        RepositoryProvider.of<UserRepository>(context),
+      )..fetchUsers(filters: initialFilters),
+      child: const _UserListView(),
+    );
+  }
 }
 
-class _UserListScreenState extends State<UserListScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<UserManagementCubit>().fetchUsers(filters: widget.initialFilters);
-  }
+class _UserListView extends StatelessWidget {
+  const _UserListView();
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +44,8 @@ class _UserListScreenState extends State<UserListScreen> {
               return const Center(child: CircularProgressIndicator());
             }
             if (state is UserManagementFailure) {
-              return Center(child: Text('Falha ao carregar usuários: ${state.message}'));
+              return Center(
+                  child: Text('Falha ao carregar usuários: ${state.message}'));
             }
             if (state is UserManagementSuccess) {
               return PaginatedDataTable2(
@@ -66,14 +72,19 @@ class _UserListScreenState extends State<UserListScreen> {
         builder: (buttonContext) {
           return FloatingActionButton(
             onPressed: () {
-              Navigator.of(buttonContext).push(
+              Navigator.of(buttonContext)
+                  .push(
                 MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
                     value: BlocProvider.of<UserManagementCubit>(context),
                     child: const UserFormScreen(),
                   ),
                 ),
-              );
+              )
+                  .then((_) {
+                // Após o formulário fechar, recarrega a lista
+                context.read<UserManagementCubit>().fetchUsers();
+              });
             },
             child: const Icon(Icons.add),
           );
@@ -100,13 +111,20 @@ class UserDataSource extends DataTableSource {
         DataCell(
           Switch(
             value: user.statusPagamento.status == 'pago',
-            onChanged: (value) { /* TODO: Implementar lógica de pagamento */ },
+            onChanged: (value) {
+              final newStatus = value ? 'pago' : 'pendente';
+              context
+                  .read<UserManagementCubit>()
+                  .updatePaymentStatus(user.id, newStatus);
+            },
           ),
         ),
         DataCell(
           Chip(
             label: Text(user.ativo ? 'Ativo' : 'Inativo'),
-            backgroundColor: user.ativo ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+            backgroundColor: user.ativo
+                ? Colors.green.withOpacity(0.2)
+                : Colors.grey.withOpacity(0.2),
           ),
         ),
         DataCell(
@@ -116,14 +134,19 @@ class UserDataSource extends DataTableSource {
                 return IconButton(
                   icon: const Icon(Icons.edit),
                   onPressed: () {
-                    Navigator.of(cellContext).push(
+                    Navigator.of(cellContext)
+                        .push(
                       MaterialPageRoute(
                         builder: (_) => BlocProvider.value(
                           value: BlocProvider.of<UserManagementCubit>(context),
                           child: UserFormScreen(user: user),
                         ),
                       ),
-                    );
+                    )
+                        .then((_) {
+                      // Recarrega a lista após a edição
+                      context.read<UserManagementCubit>().fetchUsers();
+                    });
                   },
                 );
               }),
@@ -136,16 +159,22 @@ class UserDataSource extends DataTableSource {
                       builder: (dialogContext) {
                         return AlertDialog(
                           title: const Text('Confirmar Exclusão'),
-                          content: Text('Tem certeza que deseja desativar o usuário ${user.nome}?'),
+                          content: Text(
+                              'Tem certeza que deseja desativar o usuário ${user.nome}?'),
                           actions: <Widget>[
                             TextButton(
                               child: const Text('Cancelar'),
-                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
                             ),
                             TextButton(
-                              child: Text('Desativar', style: TextStyle(color: Colors.red.shade900)),
+                              child: Text('Desativar',
+                                  style:
+                                  TextStyle(color: Colors.red.shade900)),
                               onPressed: () {
-                                context.read<UserManagementCubit>().deleteUser(user.id);
+                                context
+                                    .read<UserManagementCubit>()
+                                    .deleteUser(user.id);
                                 Navigator.of(dialogContext).pop();
                               },
                             ),

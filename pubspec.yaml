@@ -43,6 +43,8 @@ dependencies:
   
   multi_select_flutter: ^4.1.3
 
+  google_fonts: ^6.1.0
+
   # Pacote de ícones padrão do iOS.
   cupertino_icons: ^1.0.6
   intl: ^0.20.2
@@ -61,6 +63,8 @@ flutter:
 
   # Indica que estamos usando o Material Design.
   uses-material-design: true
+  assets:
+    - assets/images/logo_ciaf.png
 
   # Seção para declarar assets (imagens, etc.) que o app usará.
   # Por enquanto está vazia, mas já deixamos o esqueleto pronto para quando

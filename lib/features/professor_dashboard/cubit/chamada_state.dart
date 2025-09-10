@@ -8,16 +8,22 @@ abstract class ChamadaState extends Equatable {
 }
 
 class ChamadaInitial extends ChamadaState {}
+
 class ChamadaLoading extends ChamadaState {}
+
 class ChamadaSuccess extends ChamadaState {
   final List<AlunoChamadaModel> alunos;
-  const ChamadaSuccess(this.alunos);
+  final DateTime aulaData;
+  const ChamadaSuccess(this.alunos, this.aulaData);
   @override
-  List<Object> get props => [alunos];
+  List<Object> get props => [alunos, aulaData];
 }
+
 class ChamadaFailure extends ChamadaState {
   final String message;
   const ChamadaFailure(this.message);
 }
+
 class ChamadaSubmitting extends ChamadaState {}
+
 class ChamadaSubmitSuccess extends ChamadaState {}

@@ -10,17 +10,33 @@ class SideMenuWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Usa a cor primária do tema que definimos
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Drawer(
+      elevation: 4.0,
+      backgroundColor: primaryColor,
+      // Força o Drawer a ter cantos retos (sem borda arredondada)
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.zero,
+      ),
       child: Column(
         children: [
+          // Cabeçalho com dados do usuário
           UserAccountsDrawerHeader(
-            accountName: Text(user.nome),
+            accountName: Text(user.nome,
+                style:
+                const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             accountEmail: Text(user.email),
-            currentAccountPicture: const CircleAvatar(
-              child: Icon(Icons.person, size: 40),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(
+                user.nome.isNotEmpty ? user.nome[0].toUpperCase() : 'U',
+                style: TextStyle(fontSize: 32, color: primaryColor),
+              ),
             ),
-            decoration: const BoxDecoration(
-              color: Colors.green,
+            decoration: BoxDecoration(
+              color: primaryColor,
             ),
           ),
           Expanded(
@@ -29,10 +45,10 @@ class SideMenuWidget extends StatelessWidget {
               children: _buildMenuItems(context, user.perfil),
             ),
           ),
-          const Divider(),
+          const Divider(color: Colors.white24),
           ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Sair'),
+            leading: const Icon(Icons.logout, color: Colors.white70),
+            title: const Text('Sair', style: TextStyle(color: Colors.white70)),
             onTap: () {
               // Fecha o drawer antes de deslogar, se estiver no mobile
               if (Scaffold.of(context).isDrawerOpen) {
@@ -41,6 +57,7 @@ class SideMenuWidget extends StatelessWidget {
               context.read<AuthCubit>().logout();
             },
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -53,40 +70,48 @@ class SideMenuWidget extends StatelessWidget {
     switch (perfil) {
       case 'admin':
         items = [
-          (title: 'Dashboard', icon: Icons.dashboard, index: 0),
-          (title: 'Usuários', icon: Icons.group, index: 1),
-          (title: 'Turmas', icon: Icons.sports_soccer, index: 2),
-          (title: 'Esportes', icon: Icons.emoji_events, index: 3),
+          (title: 'Dashboard', icon: Icons.dashboard_outlined, index: 0),
+          (title: 'Usuários', icon: Icons.group_outlined, index: 1),
+          (title: 'Turmas', icon: Icons.sports_soccer_outlined, index: 2),
+          (title: 'Esportes', icon: Icons.emoji_events_outlined, index: 3),
         ];
         break;
       case 'professor':
         items = [
-          (title: 'Minhas Turmas', icon: Icons.list_alt, index: 0),
+          (title: 'Minhas Turmas', icon: Icons.list_alt_outlined, index: 0),
         ];
         break;
       case 'aluno':
       default:
         items = [
           (title: 'Minha Turma', icon: Icons.info_outline, index: 0),
-          (title: 'Horários', icon: Icons.schedule, index: 1),
+          (title: 'Horários', icon: Icons.schedule_outlined, index: 1),
         ];
         break;
     }
 
-    return items
-        .map((item) => ListTile(
-      leading: Icon(item.icon),
-      title: Text(item.title),
-      selected: navCubit.state == item.index,
-      onTap: () {
-        context.read<NavigationCubit>().selectPage(item.index);
-        // Fecha o drawer após a seleção no mobile
-        if (Scaffold.of(context).isDrawerOpen) {
-          Navigator.of(context).pop();
-        }
-      },
-    ))
-        .toList();
+    return items.map((item) {
+      final isSelected = navCubit.state == item.index;
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color:
+          isSelected ? Colors.white.withOpacity(0.15) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: ListTile(
+          leading: Icon(item.icon, color: Colors.white),
+          title: Text(item.title, style: const TextStyle(color: Colors.white)),
+          onTap: () {
+            context.read<NavigationCubit>().selectPage(item.index);
+            // Fecha o drawer após a seleção no mobile
+            if (Scaffold.of(context).isDrawerOpen) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+      );
+    }).toList();
   }
 }
 

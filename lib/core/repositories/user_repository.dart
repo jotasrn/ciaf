@@ -68,5 +68,16 @@ class UserRepository {
   Future<List<UserModel>> getAlunos() async {
     return getUsers(filters: {'perfil': 'aluno'});
   }
+
+  Future<void> updateUserPaymentStatus(String userId, String status) async {
+    try {
+      await _apiService.dio.put(
+        '/usuarios/$userId/pagamento',
+        data: {'status': status},
+      );
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao atualizar pagamento.');
+    }
+  }
 }
 

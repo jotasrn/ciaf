@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
+import 'package:escolinha_futebol_app/app/widgets/custom_text_form_field.dart';
 
 class UserFormScreen extends StatefulWidget {
   final UserModel? user;
@@ -43,7 +44,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
         'nome_completo': _nameController.text,
         'email': _emailController.text,
         'perfil': _selectedProfile,
-        if (_passwordController.text.isNotEmpty) 'senha': _passwordController.text,
+        if (_passwordController.text.isNotEmpty)
+          'senha': _passwordController.text,
       };
 
       if (_isEditing) {
@@ -52,7 +54,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         cubit.createUser(userData);
       }
 
-      if(Navigator.canPop(context)) {
+      if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }
     }
@@ -74,35 +76,50 @@ class _UserFormScreenState extends State<UserFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextFormField(
+                  CustomTextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Nome Completo'),
-                    validator: (value) => value!.trim().isEmpty ? 'Campo obrigatório' : null,
+                    label: 'Nome Completo',
+                    icon: Icons.person_outline,
+                    validator: (value) =>
+                    value!.trim().isEmpty ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'E-mail'),
+                    label: 'E-mail',
+                    icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => value!.isEmpty || !value.contains('@') ? 'E-mail inválido' : null,
+                    validator: (value) =>
+                    value!.isEmpty || !value.contains('@')
+                        ? 'E-mail inválido'
+                        : null,
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextFormField(
                     controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: _isEditing ? 'Nova Senha (deixe em branco para não alterar)' : 'Senha',
-                    ),
+                    label: _isEditing
+                        ? 'Nova Senha (opcional)'
+                        : 'Senha',
+                    icon: Icons.lock_outline,
                     obscureText: true,
-                    validator: (value) => !_isEditing && value!.trim().isEmpty ? 'Campo obrigatório' : null,
+                    validator: (value) =>
+                    !_isEditing && value!.trim().isEmpty
+                        ? 'Campo obrigatório'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: _selectedProfile,
-                    decoration: const InputDecoration(labelText: 'Perfil'),
+                    decoration: const InputDecoration(
+                      labelText: 'Perfil',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                      border: OutlineInputBorder(),
+                    ),
                     items: ['aluno', 'professor', 'admin']
                         .map((label) => DropdownMenuItem(
                       value: label,
-                      child: Text(label[0].toUpperCase() + label.substring(1)),
+                      child: Text(
+                          label[0].toUpperCase() + label.substring(1)),
                     ))
                         .toList(),
                     onChanged: (value) {
@@ -110,12 +127,17 @@ class _UserFormScreenState extends State<UserFormScreen> {
                         _selectedProfile = value;
                       });
                     },
-                    validator: (value) => value == null ? 'Selecione um perfil' : null,
+                    validator: (value) =>
+                    value == null ? 'Selecione um perfil' : null,
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: _submitForm,
-                    child: Text(_isEditing ? 'Salvar Alterações' : 'Criar Usuário'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                        _isEditing ? 'Salvar Alterações' : 'Criar Usuário'),
                   ),
                 ],
               ),
@@ -126,3 +148,4 @@ class _UserFormScreenState extends State<UserFormScreen> {
     );
   }
 }
+

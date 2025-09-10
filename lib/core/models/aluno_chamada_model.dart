@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:escolinha_futebol_app/features/professor_dashboard/screens/chamada_screen.dart';
 
+
+enum StatusPresenca { presente, ausente, justificado, pendente }
+
 class AlunoChamadaModel extends Equatable {
   final String id;
   final String nome;

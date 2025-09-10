@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
-import 'package:escolinha_futebol_app/core/repositories/sport_repository.dart';
-import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
-import 'package:escolinha_futebol_app/core/repositories/user_repository.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/sport_cubit.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_cubit.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/admin_home_screen.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/screens/sport_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_list_screen.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/screens/sport_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/user_list_screen.dart';
 import 'package:escolinha_futebol_app/features/aluno_dashboard/screens/aluno_home_screen.dart';
 import 'package:escolinha_futebol_app/features/auth/cubit/auth_cubit.dart';
@@ -23,33 +17,47 @@ class ShellScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pega o estado de autenticação para obter os dados do usuário.
     final authState = context.watch<AuthCubit>().state;
 
+    // Um fallback de segurança, embora o roteador principal em main.dart deva prevenir isso.
     if (authState is! AuthAuthenticated) {
-      // Fallback de segurança: se o estado não for autenticado, mostra um loader.
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final UserModel user = authState.user;
-    final List<Widget> pages = _getPagesForProfile(context, user.perfil);
+    // Pega a lista de telas e títulos com base no perfil do usuário.
+    final List<Widget> pages = _getPagesForProfile(user.perfil);
+    final List<String> pageTitles = _getPageTitlesForProfile(user.perfil);
 
     // Providencia o NavigationCubit para a árvore de widgets abaixo dele.
     return BlocProvider(
       create: (context) => NavigationCubit(),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          // Define o ponto de quebra para o layout responsivo.
           bool isDesktop = constraints.maxWidth > 800;
 
           return Scaffold(
             appBar: isDesktop
-                ? null
+                ? null // Sem AppBar no layout de desktop.
                 : AppBar(
-              title: const Text('Escolinha de Futebol'),
+              // O título é construído com base no estado do NavigationCubit.
+              title: BlocBuilder<NavigationCubit, int>(
+                builder: (context, pageIndex) {
+                  if (pageIndex >= pageTitles.length) return const Text('');
+                  return Text(pageTitles[pageIndex]);
+                },
+              ),
             ),
+            // No mobile, o menu fica na "gaveta" (drawer).
             drawer: isDesktop ? null : SideMenuWidget(user: user),
             body: Row(
               children: [
+                // No desktop, o menu é fixo e visível à esquerda.
                 if (isDesktop) SideMenuWidget(user: user),
+
+                // O conteúdo principal que muda de acordo com a seleção no menu.
                 Expanded(
                   child: BlocBuilder<NavigationCubit, int>(
                     builder: (context, pageIndex) {
@@ -66,25 +74,33 @@ class ShellScreen extends StatelessWidget {
     );
   }
 
-  /// Retorna a lista de telas (páginas) com base no perfil do usuário.
-  List<Widget> _getPagesForProfile(BuildContext context, String perfil) {
+  /// Retorna a lista de TÍTULOS que deve corresponder à ordem da lista de PÁGINAS.
+  List<String> _getPageTitlesForProfile(String perfil) {
+    switch (perfil) {
+      case 'admin':
+        return [
+          'Dashboard',
+          'Gerenciar Usuários',
+          'Gerenciar Turmas',
+          'Gerenciar Esportes',
+        ];
+      case 'professor':
+        return ['Minhas Turmas'];
+      case 'aluno':
+      default:
+        return ['Minha Turma'];
+    }
+  }
+
+  /// Retorna a lista de PÁGINAS (Widgets) com base no perfil do usuário.
+  List<Widget> _getPagesForProfile(String perfil) {
     switch (perfil) {
       case 'admin':
         return [
           const AdminHomeScreen(),
-          BlocProvider(
-            create: (context) => UserManagementCubit(
-              RepositoryProvider.of<UserRepository>(context),
-            ),
-            child: const UserListScreen(),
-          ),
+          const UserListScreen(),
           const TurmaListScreen(),
-          BlocProvider(
-            create: (context) => SportCubit(
-              RepositoryProvider.of<SportRepository>(context),
-            ),
-            child: const SportListScreen(),
-          ),
+          const SportListScreen(),
         ];
       case 'professor':
         return [
@@ -94,9 +110,7 @@ class ShellScreen extends StatelessWidget {
       default:
         return [
           const AlunoHomeScreen(),
-          const Center(child: Text('Tela de Horários (Em construção)')),
         ];
     }
   }
 }
-

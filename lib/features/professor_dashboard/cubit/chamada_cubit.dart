@@ -11,50 +11,75 @@ class ChamadaCubit extends Cubit<ChamadaState> {
   Future<void> fetchAlunos(String aulaId) async {
     emit(ChamadaLoading());
     try {
-      final alunos = await _aulaRepository.getAlunosDaAula(aulaId);
-      emit(ChamadaSuccess(alunos));
+      final aulaDetails = await _aulaRepository.getAulaDetails(aulaId);
+      emit(ChamadaSuccess(aulaDetails.alunos, aulaDetails.data));
     } catch (e) {
       emit(ChamadaFailure(e.toString()));
     }
   }
 
   void marcarPresenca(String alunoId, StatusPresenca status) {
-    if (state is ChamadaSuccess) {
-      final currentState = state as ChamadaSuccess;
+    final currentState = state;
+    if (currentState is ChamadaSuccess) {
       final updatedAlunos = currentState.alunos.map((aluno) {
         if (aluno.id == alunoId) {
           return aluno.copyWith(status: status);
         }
         return aluno;
       }).toList();
-      emit(ChamadaSuccess(updatedAlunos));
+      emit(ChamadaSuccess(updatedAlunos, currentState.aulaData));
     }
   }
 
   Future<void> submeterChamada(String aulaId) async {
-    if (state is ChamadaSuccess) {
+    final currentState = state;
+    if (currentState is ChamadaSuccess) {
       emit(ChamadaSubmitting());
       try {
-        final currentState = state as ChamadaSuccess;
-        // Filtra apenas os alunos que tiveram o status alterado
         final presencasParaEnviar = currentState.alunos
             .where((aluno) => aluno.status != StatusPresenca.pendente)
             .map((aluno) => {
           'aluno_id': aluno.id,
-          'status': aluno.status.toString().split('.').last, // Converte enum para string
+          'status': aluno.status.toString().split('.').last,
         })
             .toList();
 
         if (presencasParaEnviar.isEmpty) {
-          emit(ChamadaSubmitSuccess()); // Nada a enviar
+          emit(ChamadaSubmitSuccess());
           return;
         }
 
         await _aulaRepository.submeterChamada(aulaId, presencasParaEnviar);
         emit(ChamadaSubmitSuccess());
       } catch (e) {
+        // Em caso de erro, retorna para a tela anterior com os dados
         emit(ChamadaFailure(e.toString()));
+        emit(currentState); // Re-emite o estado de sucesso para a UI se recuperar
       }
+    }
+  }
+
+  Future<void> editarPresencaAluno({
+    required String aulaId,
+    required String alunoId,
+    required StatusPresenca novoStatus,
+  }) async {
+    // Não precisa de estado de loading para uma ação rápida
+    try {
+      // Cria o payload para enviar para a API
+      final presencaData = [{
+        'aluno_id': alunoId,
+        'status': novoStatus.toString().split('.').last,
+      }];
+
+      // Chama a mesma API de submissão, que faz um "upsert" (cria ou atualiza)
+      await _aulaRepository.submeterChamada(aulaId, presencaData);
+
+      // Recarrega a lista para garantir que a UI está 100% atualizada
+      // com os dados do servidor.
+      await fetchAlunos(aulaId);
+    } catch (e) {
+      emit(ChamadaFailure(e.toString()));
     }
   }
 }

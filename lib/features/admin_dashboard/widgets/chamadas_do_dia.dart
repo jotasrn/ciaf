@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/chamadas_do_dia_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/chamadas_do_dia_state.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/screens/admin_chamada_screen.dart';
 
 class ChamadasDoDiaWidget extends StatelessWidget {
   const ChamadasDoDiaWidget({super.key});
@@ -15,6 +16,8 @@ class ChamadasDoDiaWidget extends StatelessWidget {
         RepositoryProvider.of<AulaRepository>(context),
       )..fetchChamadas(), // Busca as chamadas do dia ao iniciar
       child: Card(
+        elevation: 2.0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -23,10 +26,13 @@ class ChamadasDoDiaWidget extends StatelessWidget {
               BlocBuilder<ChamadasDoDiaCubit, ChamadasDoDiaState>(
                 builder: (context, state) {
                   String dataExibida =
-                      DateFormat('dd/MM/yyyy').format(DateTime.now());
+                  DateFormat('dd/MM/yyyy').format(DateTime.now());
+                  DateTime dataInicialSeletor = DateTime.now();
+
                   if (state is ChamadasDoDiaSuccess) {
                     dataExibida =
                         DateFormat('dd/MM/yyyy').format(state.selectedDate);
+                    dataInicialSeletor = state.selectedDate;
                   }
 
                   return Row(
@@ -46,16 +52,16 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                           return IconButton(
                             icon: const Icon(Icons.calendar_today,
                                 color: Colors.grey),
+                            tooltip: 'Selecionar outra data',
                             onPressed: () async {
                               final cubit =
-                                  buttonContext.read<ChamadasDoDiaCubit>();
+                              buttonContext.read<ChamadasDoDiaCubit>();
                               final novaData = await showDatePicker(
                                 context: buttonContext,
-                                initialDate: (state is ChamadasDoDiaSuccess)
-                                    ? state.selectedDate
-                                    : DateTime.now(),
+                                initialDate: dataInicialSeletor,
                                 firstDate: DateTime(2020),
-                                lastDate: DateTime(2030),
+                                lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
                               );
                               if (novaData != null) {
                                 cubit.fetchChamadas(data: novaData);
@@ -78,17 +84,19 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                       return const Center(child: CircularProgressIndicator());
                     }
                     if (state is ChamadasDoDiaFailure) {
-                      return Center(child: Text(state.message));
+                      return Center(
+                          child:
+                          Text(state.message.replaceAll('Exception: ', '')));
                     }
                     if (state is ChamadasDoDiaSuccess) {
                       if (state.aulas.isEmpty) {
                         return const Center(
                             child:
-                                Text('Nenhuma aula agendada para esta data.'));
+                            Text('Nenhuma aula agendada para esta data.'));
                       }
                       return ListView.separated(
                         shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
+                        physics: const BouncingScrollPhysics(),
                         itemCount: state.aulas.length,
                         itemBuilder: (context, index) {
                           final aula = state.aulas[index];
@@ -97,8 +105,10 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                               : 0.0;
 
                           return ListTile(
-                            title:
-                                Text('${aula.turmaNome} (${aula.esporteNome})'),
+                            title: Text(
+                                '${aula.turmaNome} (${aula.esporteNome})',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w500)),
                             subtitle: Text(
                               'Presença: ${aula.totalPresentes} de ${aula.totalAlunosNaTurma}',
                             ),
@@ -123,7 +133,12 @@ class ChamadasDoDiaWidget extends StatelessWidget {
                               ),
                             ),
                             onTap: () {
-                              // TODO: Navegar para a tela de detalhes da aula/chamada
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => AdminChamadaScreen(
+                                  aulaId: aula.id,
+                                  turmaNome: aula.turmaNome,
+                                ),
+                              ));
                             },
                           );
                         },
@@ -141,3 +156,4 @@ class ChamadasDoDiaWidget extends StatelessWidget {
     );
   }
 }
+

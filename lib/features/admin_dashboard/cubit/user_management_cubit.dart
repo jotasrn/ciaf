@@ -45,4 +45,15 @@ class UserManagementCubit extends Cubit<UserManagementState> {
       print('Erro ao deletar usuário: $e');
     }
   }
+
+  Future<void> updatePaymentStatus(String userId, String status) async {
+    try {
+      await _userRepository.updateUserPaymentStatus(userId, status);
+      // Recarrega a lista para mostrar a alteração
+      fetchUsers();
+    } catch (e) {
+      // Emite um estado de falha para a UI poder mostrar um erro se necessário
+      emit(UserManagementFailure(e.toString()));
+    }
+  }
 }

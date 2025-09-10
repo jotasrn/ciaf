@@ -21,24 +21,17 @@ class AulaResumoModel extends Equatable {
 
   factory AulaResumoModel.fromJson(Map<String, dynamic> json) {
     return AulaResumoModel(
-      id: json['_id']['\$oid'], // O ID vem como um objeto BSON
-      data: DateTime.parse(json['data']['\$date']), // A data também
-      status: json['status'],
-      turmaNome: json['turma_nome'],
-      esporteNome: json['esporte_nome'],
-      totalAlunosNaTurma: json['total_alunos_na_turma'],
-      totalPresentes: json['total_presentes'],
+      id: (json['_id'] is String ? json['_id'] : json['_id']?['\$oid']) ?? '',
+      // Se a data for nula, usa uma data padrão para não quebrar o app
+      data: json['data']?['\$date'] != null ? DateTime.parse(json['data']['\$date']) : DateTime(1970),
+      status: json['status'] ?? 'indefinido',
+      turmaNome: json['turma_nome'] ?? 'N/A',
+      esporteNome: json['esporte_nome'] ?? 'N/A',
+      totalAlunosNaTurma: json['total_alunos_na_turma'] ?? 0,
+      totalPresentes: json['total_presentes'] ?? 0,
     );
   }
 
   @override
-  List<Object?> get props => [
-        id,
-        data,
-        status,
-        turmaNome,
-        esporteNome,
-        totalAlunosNaTurma,
-        totalPresentes
-      ];
+  List<Object?> get props => [id, data, status, turmaNome, esporteNome, totalAlunosNaTurma, totalPresentes];
 }
