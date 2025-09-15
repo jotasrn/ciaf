@@ -1,6 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:equatable/equatable.dart';
-import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/chamadas_do_dia_state.dart';
 

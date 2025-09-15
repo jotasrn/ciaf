@@ -98,18 +98,6 @@ class TurmaRepository {
     }
   }
 
-  Future<List<TurmaModel>> getTodasTurmas() async {
-    try {
-      // Chama a rota /api/turmas/ sem nenhum filtro
-      final response = await _apiService.dio.get('/turmas/');
-      final List<dynamic> data = response.data;
-      // Nosso TurmaModel.fromJson já está preparado para lidar com os dados populados
-      return data.map((json) => TurmaModel.fromJson(json)).toList();
-    } on DioException {
-      throw Exception('Falha ao buscar todas as turmas.');
-    }
-  }
-
   Future<List<TurmaModel>> getMinhasTurmas() async {
     try {
       // Rota segura que criamos no backend
@@ -118,6 +106,16 @@ class TurmaRepository {
       return data.map((json) => TurmaModel.fromJson(json)).toList();
     } on DioException {
       throw Exception('Falha ao buscar suas turmas.');
+    }
+  }
+
+  Future<List<TurmaModel>> getTodasTurmas() async {
+    try {
+      final response = await _apiService.dio.get('/turmas/');
+      final List<dynamic> data = response.data;
+      return data.map((json) => TurmaModel.fromJson(json)).toList();
+    } on DioException {
+      throw Exception('Falha ao buscar todas as turmas.');
     }
   }
 }

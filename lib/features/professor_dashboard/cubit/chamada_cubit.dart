@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/features/professor_dashboard/cubit/chamada_state.dart';
 import 'package:escolinha_futebol_app/core/models/aluno_chamada_model.dart';
-import 'package:escolinha_futebol_app/features/professor_dashboard/screens/chamada_screen.dart';
 
 class ChamadaCubit extends Cubit<ChamadaState> {
   final AulaRepository _aulaRepository;

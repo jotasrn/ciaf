@@ -33,7 +33,6 @@ class EsporteSimplificadoModel extends Equatable {
   List<Object?> get props => [id, nome];
 }
 
-
 class TurmaModel extends Equatable {
   final String id;
   final String nome;

@@ -7,8 +7,8 @@ import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_c
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_state.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/sport_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/sport_state.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/screens/aluno_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/category_selection_screen.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/screens/user_list_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/chamadas_do_dia.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/kpi_card.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/simple_form_dialog.dart';
@@ -19,7 +19,7 @@ class AdminHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Centralizamos os providers no topo da tela
+    // A tela agora cria todos os Cubits que ela precisa
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -35,14 +35,11 @@ class AdminHomeScreen extends StatelessWidget {
       ],
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        // 2. AppBar REMOVIDA para uma tela mais limpa
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < 900) {
-              // Layout Mobile (uma única coluna)
               return _buildMobileLayout();
             } else {
-              // Layout Desktop (duas colunas)
               return _buildDesktopLayout();
             }
           },
@@ -51,7 +48,6 @@ class AdminHomeScreen extends StatelessWidget {
     );
   }
 
-  // Layout para telas estreitas (ordem ajustada)
   Widget _buildMobileLayout() {
     return const SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -60,15 +56,14 @@ class AdminHomeScreen extends StatelessWidget {
         children: [
           _KpiSection(),
           SizedBox(height: 24),
-          _EsportesSection(), // Esportes vem primeiro
+          _EsportesSection(),
           SizedBox(height: 24),
-          _ChamadasSection(), // Chamadas vem depois
+          _ChamadasSection(),
         ],
       ),
     );
   }
 
-  // Layout para telas largas (ordem ajustada)
   Widget _buildDesktopLayout() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -76,25 +71,25 @@ class AdminHomeScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            flex: 3, // Coluna principal ocupa 3/5 do espaço
+            flex: 3,
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _KpiSection(),
                   SizedBox(height: 24),
-                  _EsportesSection(), // Esportes na coluna principal
+                  _EsportesSection(),
                 ],
               ),
             ),
           ),
           SizedBox(width: 24),
           Expanded(
-            flex: 2, // Coluna lateral ocupa 2/5 do espaço
+            flex: 2,
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _ChamadasSection(), // Chamadas na coluna lateral
+                  _ChamadasSection(),
                 ],
               ),
             ),
@@ -123,9 +118,9 @@ class _KpiSection extends StatelessWidget {
                 icon: Icons.group,
                 color: Colors.blue,
                 onTap: () {
+                  // Navega para a nova tela de alunos
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const UserListScreen(
-                        initialFilters: {'perfil': 'aluno'}),
+                    builder: (_) => const AlunoListScreen(),
                   ));
                 },
               ),
@@ -134,7 +129,7 @@ class _KpiSection extends StatelessWidget {
                 value: state.totalTurmas.toString(),
                 icon: Icons.sports_soccer,
                 color: Colors.orange,
-                onTap: () => context.read<NavigationCubit>().selectPage(2),
+                onTap: () => context.read<NavigationCubit>().selectPage(3),
               ),
               KpiCard(
                 title: 'Não Pagantes',
@@ -143,8 +138,9 @@ class _KpiSection extends StatelessWidget {
                 color: Colors.red,
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const UserListScreen(
-                        initialFilters: {'status_pagamento': 'pendente'}),
+                    builder: (_) => const AlunoListScreen(
+                      initialFilters: {'status_pagamento': 'pendente'},
+                    ),
                   ));
                 },
               ),
@@ -163,7 +159,7 @@ class _ChamadasSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
-      height: 400, // Aumentando um pouco a altura
+      height: 400,
       child: ChamadasDoDiaWidget(),
     );
   }

@@ -24,7 +24,7 @@ class UserRepository {
     try {
       // Adiciona campos que o backend espera
       userData['data_nascimento'] =
-      '1900-01-01'; // TODO: Adicionar campo de data no form
+      '1900-01-01'; // adicione isso: Adicionar campo de data no form
 
       final response = await _apiService.dio.post('/usuarios/', data: userData);
       // O backend não retorna o usuário criado, então retornamos um modelo local

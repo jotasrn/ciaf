@@ -15,8 +15,7 @@ class SideMenuWidget extends StatelessWidget {
 
     return Drawer(
       elevation: 4.0,
-      backgroundColor: primaryColor,
-      // Força o Drawer a ter cantos retos (sem borda arredondada)
+      backgroundColor: primaryColor, // Cor de fundo baseada no tema
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
       ),
@@ -72,8 +71,9 @@ class SideMenuWidget extends StatelessWidget {
         items = [
           (title: 'Dashboard', icon: Icons.dashboard_outlined, index: 0),
           (title: 'Usuários', icon: Icons.group_outlined, index: 1),
-          (title: 'Turmas', icon: Icons.sports_soccer_outlined, index: 2),
-          (title: 'Esportes', icon: Icons.emoji_events_outlined, index: 3),
+          (title: 'Alunos', icon: Icons.school_outlined, index: 2),
+          (title: 'Turmas', icon: Icons.sports_soccer_outlined, index: 3),
+          (title: 'Esportes', icon: Icons.emoji_events_outlined, index: 4),
         ];
         break;
       case 'professor':
