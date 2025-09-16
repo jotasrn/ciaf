@@ -5,7 +5,7 @@ import 'package:escolinha_futebol_app/core/models/turma_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_state.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_detail_screen.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/turma_detail_dialog.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_form_screen.dart';
 
 class TurmaListScreen extends StatelessWidget {
@@ -136,12 +136,11 @@ class TurmaDataSource extends DataTableSource {
       index: index,
       onSelectChanged: (isSelected) {
         if (isSelected ?? false) {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => TurmaDetailScreen(
-              turmaId: turma.id,
-              turmaNome: turma.nome,
-            ),
-          ));
+          showTurmaDetailDialog(
+            context: context,
+            turmaId: turma.id,
+            turmaNome: turma.nome,
+          );
         }
       },
       cells: [
@@ -151,6 +150,7 @@ class TurmaDataSource extends DataTableSource {
         DataCell(Text(turma.professor.nome)),
         DataCell(
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Builder(builder: (cellContext) {
                 return IconButton(

@@ -2,14 +2,22 @@ import 'package:equatable/equatable.dart';
 
 class StatusPagamento extends Equatable {
   final String status;
-  const StatusPagamento({required this.status});
+  final DateTime? dataVencimento;
+
+  const StatusPagamento({required this.status, this.dataVencimento});
 
   factory StatusPagamento.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const StatusPagamento(status: 'pendente');
-    return StatusPagamento(status: json['status'] ?? 'pendente');
+    return StatusPagamento(
+      status: json['status'] ?? 'pendente',
+      dataVencimento: json['data_vencimento'] != null
+          ? DateTime.tryParse(json['data_vencimento']['\$date'])
+          : null,
+    );
   }
+
   @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [status, dataVencimento];
 }
 
 class UserModel extends Equatable {
@@ -36,18 +44,30 @@ class UserModel extends Equatable {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    String safeGetId(dynamic idField) {
+      if (idField is String) return idField;
+      if (idField is Map) return idField['\$oid'] ?? '';
+      return '';
+    }
+
+    DateTime? safeParseDate(dynamic dateField) {
+      if (dateField is String) return DateTime.tryParse(dateField);
+      if (dateField is Map && dateField.containsKey('\$date')) {
+        return DateTime.tryParse(dateField['\$date']);
+      }
+      return null;
+    }
+
     return UserModel(
-      // CORREÇÃO: Lê o ID de dentro do objeto $oid ou como string
-      id: (json['_id'] is String ? json['_id'] : json['_id']?['\$oid']) ?? '',
+      id: safeGetId(json['_id']),
       nome: json['nome_completo'] ?? 'Nome não informado',
       email: json['email'] ?? 'E-mail não informado',
       perfil: json['perfil'] ?? 'indefinido',
       ativo: json['ativo'] ?? true,
       statusPagamento: StatusPagamento.fromJson(json['status_pagamento']),
-      // Garante que a conversão de data seja segura
-      dataNascimento: json['data_nascimento'] != null ? DateTime.tryParse(json['data_nascimento']) : null,
-      dataMatricula: json['data_matricula'] != null ? DateTime.tryParse(json['data_matricula']) : null,
-      contatoResponsavel: json['contato_responsavel'],
+      dataNascimento: safeParseDate(json['data_nascimento']),
+      dataMatricula: safeParseDate(json['data_matricula']),
+      contatoResponsavel: json['contato_responsavel'] as Map<String, dynamic>?,
     );
   }
 

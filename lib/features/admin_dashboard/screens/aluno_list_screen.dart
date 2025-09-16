@@ -1,6 +1,7 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:escolinha_futebol_app/core/models/user_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/user_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/user_management_cubit.dart';
@@ -16,8 +17,10 @@ class AlunoListScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => UserManagementCubit(
         RepositoryProvider.of<UserRepository>(context),
-      )..fetchUsers(filters: initialFilters ?? {'perfil': 'aluno'}),
-      child: _AlunoListView(parentFilters: initialFilters ?? {'perfil': 'aluno'}),
+      )..fetchUsers(filters: initialFilters ?? {'perfil': 'aluno'}), // Filtro padrão
+      child: _AlunoListView(
+        parentFilters: initialFilters ?? {'perfil': 'aluno'},
+      ),
     );
   }
 }
@@ -31,11 +34,24 @@ class _AlunoListView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gerenciar Alunos'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Verificar Mensalidades Vencidas',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Verificando pagamentos... (Funcionalidade em breve)')),
+              );
+            },
+          )
+        ],
       ),
       body: BlocConsumer<UserManagementCubit, UserManagementState>(
         listener: (context, state) {
-          if(state is UserManagementFailure){
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+          if (state is UserManagementFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            );
           }
         },
         builder: (context, state) {
@@ -43,10 +59,7 @@ class _AlunoListView extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is UserManagementSuccess) {
-            // DUPLA VERIFICAÇÃO (SUA SUGESTÃO)
-            final usuariosFiltrados = state.users.where((u) => u.perfil == 'aluno').toList();
-
-            if (usuariosFiltrados.isEmpty) {
+            if (state.users.isEmpty) {
               return const Center(child: Text('Nenhum aluno encontrado.'));
             }
             return Padding(
@@ -54,18 +67,18 @@ class _AlunoListView extends StatelessWidget {
               child: PaginatedDataTable2(
                 columns: const [
                   DataColumn(label: Text('Nome Completo')),
-                  DataColumn(label: Text('E-mail')),
+                  DataColumn(label: Text('Vencimento')),
                   DataColumn(label: Text('Pagamento')),
                   DataColumn(label: Text('Status')),
                   DataColumn(label: Text('Ações')),
                 ],
-                source: _AlunoDataSource(usuariosFiltrados, context, parentFilters),
+                source: _AlunoDataSource(state.users, context, parentFilters),
                 minWidth: 800,
                 showCheckboxColumn: false,
               ),
             );
           }
-          return const SizedBox.shrink();
+          return Center(child: Text('Ocorreu um erro ao carregar os alunos.'));
         },
       ),
       floatingActionButton: _AddUserButton(parentFilters: parentFilters),
@@ -79,8 +92,11 @@ class _AddUserButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
+      tooltip: 'Adicionar Aluno',
       onPressed: () {
-        showAlunoFormDialog(context: context);
+        showAlunoFormDialog(context: context).then((_) {
+          context.read<UserManagementCubit>().fetchUsers(filters: parentFilters);
+        });
       },
       child: const Icon(Icons.add),
     );
@@ -96,21 +112,47 @@ class _AlunoDataSource extends DataTableSource {
   @override
   DataRow2 getRow(int index) {
     final user = users[index];
+    final hoje = DateUtils.dateOnly(DateTime.now());
+    final dataVencimento = user.statusPagamento.dataVencimento != null
+        ? DateUtils.dateOnly(user.statusPagamento.dataVencimento!)
+        : null;
+
+    bool estaAtrasado = false;
+    if (dataVencimento != null) {
+      estaAtrasado = dataVencimento.isBefore(hoje) && user.statusPagamento.status != 'pago';
+    }
+
     return DataRow2.byIndex(index: index, cells: [
       DataCell(Text(user.nome)),
-      DataCell(Text(user.email)),
       DataCell(
-        // O Switch agora é um widget separado para melhor gerenciamento de estado
-        _PaymentStatusSwitch(user: user, parentFilters: parentFilters),
+        Text(
+          dataVencimento != null ? DateFormat('dd/MM/yyyy').format(dataVencimento) : '--/--/----',
+          style: TextStyle(
+            color: estaAtrasado ? Colors.red : (user.statusPagamento.status == 'pago' ? Colors.green : Colors.black87),
+            fontWeight: estaAtrasado ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
       ),
-      DataCell(Chip(label: Text(user.ativo ? 'Ativo' : 'Inativo'))),
+      DataCell(
+        Switch(
+          value: user.statusPagamento.status == 'pago',
+          onChanged: (value) {
+            final newStatus = value ? 'pago' : 'pendente';
+            context.read<UserManagementCubit>().updatePaymentStatus(user.id, newStatus);
+          },
+        ),
+      ),
+      DataCell(Chip(
+        label: Text(user.ativo ? 'Ativo' : 'Inativo'),
+        backgroundColor: user.ativo ? Colors.green.withOpacity(0.2) : Colors.grey.withOpacity(0.2),
+        side: BorderSide.none,
+      )),
       DataCell(PopupMenuButton<String>(
+        icon: const Icon(Icons.more_vert),
         onSelected: (value) {
           if (value == 'editar') {
             showAlunoFormDialog(context: context, aluno: user).then((_) {
-              // ======================= CORREÇÃO AQUI =======================
               context.read<UserManagementCubit>().fetchUsers(filters: parentFilters);
-              // =============================================================
             });
           } else if (value == 'desativar') {
             showDialog(
@@ -149,22 +191,4 @@ class _AlunoDataSource extends DataTableSource {
   int get rowCount => users.length;
   @override
   int get selectedRowCount => 0;
-}
-
-class _PaymentStatusSwitch extends StatelessWidget {
-  final UserModel user;
-  final Map<String, String> parentFilters;
-
-  const _PaymentStatusSwitch({required this.user, required this.parentFilters});
-
-  @override
-  Widget build(BuildContext context) {
-    return Switch(
-      value: user.statusPagamento.status == 'pago',
-      onChanged: (value) {
-        final newStatus = value ? 'pago' : 'pendente';
-        context.read<UserManagementCubit>().updatePaymentStatus(user.id, newStatus);
-      },
-    );
-  }
 }

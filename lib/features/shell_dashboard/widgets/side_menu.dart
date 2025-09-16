@@ -74,6 +74,7 @@ class SideMenuWidget extends StatelessWidget {
           (title: 'Alunos', icon: Icons.school_outlined, index: 2),
           (title: 'Turmas', icon: Icons.sports_soccer_outlined, index: 3),
           (title: 'Esportes', icon: Icons.emoji_events_outlined, index: 4),
+          (title: 'Categorias', icon: Icons.category_outlined, index: 5),
         ];
         break;
       case 'professor':

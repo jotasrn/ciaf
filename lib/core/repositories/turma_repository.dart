@@ -118,4 +118,5 @@ class TurmaRepository {
       throw Exception('Falha ao buscar todas as turmas.');
     }
   }
+
 }

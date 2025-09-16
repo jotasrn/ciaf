@@ -39,4 +39,14 @@ class SportRepository {
       throw Exception(e.response?.data['mensagem'] ?? 'Falha ao deletar esporte.');
     }
   }
+
+  Future<List<SportWithCategoriesModel>> getSportsWithCategories() async {
+    try {
+      final response = await _apiService.dio.get('/esportes/com-categorias');
+      final List<dynamic> data = response.data;
+      return data.map((json) => SportWithCategoriesModel.fromJson(json)).toList();
+    } on DioException {
+      throw Exception('Falha ao buscar esportes com categorias.');
+    }
+  }
 }
