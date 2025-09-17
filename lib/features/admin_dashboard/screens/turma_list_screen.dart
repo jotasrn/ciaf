@@ -7,7 +7,7 @@ import 'package:escolinha_futebol_app/core/repositories/sport_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_management_state.dart';
-import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_form_screen.dart';
+import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/turma_form_dialog.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/widgets/turma_detail_dialog.dart';
 
 class TurmaListScreen extends StatelessWidget {
@@ -65,12 +65,14 @@ class _TurmaListView extends StatelessWidget {
         listener: (context, state) {
           if (state is TurmaManagementFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text(state.message), backgroundColor: Colors.red),
             );
           }
         },
         builder: (context, state) {
-          if (state is TurmaManagementLoading || state is TurmaManagementInitial) {
+          if (state is TurmaManagementLoading ||
+              state is TurmaManagementInitial) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is TurmaManagementSuccess) {
@@ -123,7 +125,8 @@ class TurmaDataSource extends DataTableSource {
       index: index,
       onSelectChanged: (isSelected) {
         if (isSelected ?? false) {
-          showTurmaDetailDialog(context: context, turmaId: turma.id, turmaNome: turma.nome);
+          showTurmaDetailDialog(
+              context: context, turmaId: turma.id, turmaNome: turma.nome);
         }
       },
       cells: [
@@ -137,7 +140,8 @@ class TurmaDataSource extends DataTableSource {
             onSelected: (value) {
               final cubit = context.read<TurmaManagementCubit>();
               if (value == 'editar') {
-                Navigator.of(context).push(MaterialPageRoute(
+                Navigator.of(context)
+                    .push(MaterialPageRoute(
                   builder: (_) => BlocProvider.value(
                     value: cubit,
                     child: TurmaFormScreen(
@@ -146,9 +150,11 @@ class TurmaDataSource extends DataTableSource {
                       categoria: turma.categoria,
                     ),
                   ),
-                )).then((_) {
+                ))
+                    .then((_) {
                   if (esporteId != null && categoria != null) {
-                    cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
+                    cubit.fetchTurmas(
+                        esporteId: esporteId!, categoria: categoria!);
                   } else {
                     cubit.fetchTodasTurmas();
                   }
@@ -158,11 +164,15 @@ class TurmaDataSource extends DataTableSource {
                   context: context,
                   builder: (dialogContext) => AlertDialog(
                     title: const Text('Confirmar Exclusão'),
-                    content: Text('Tem certeza que deseja deletar a turma "${turma.nome}"?'),
+                    content: Text(
+                        'Tem certeza que deseja deletar a turma "${turma.nome}"?'),
                     actions: [
-                      TextButton(child: const Text('Cancelar'), onPressed: () => Navigator.of(dialogContext).pop()),
                       TextButton(
-                        child: const Text('Deletar', style: TextStyle(color: Colors.red)),
+                          child: const Text('Cancelar'),
+                          onPressed: () => Navigator.of(dialogContext).pop()),
+                      TextButton(
+                        child: const Text('Deletar',
+                            style: TextStyle(color: Colors.red)),
                         onPressed: () {
                           cubit.deleteTurmaById(turma.id);
                           Navigator.of(dialogContext).pop();
@@ -174,8 +184,16 @@ class TurmaDataSource extends DataTableSource {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'editar', child: ListTile(leading: Icon(Icons.edit_outlined), title: Text('Editar'))),
-              const PopupMenuItem(value: 'excluir', child: ListTile(leading: Icon(Icons.delete_outline), title: Text('Excluir'))),
+              const PopupMenuItem(
+                  value: 'editar',
+                  child: ListTile(
+                      leading: Icon(Icons.edit_outlined),
+                      title: Text('Editar'))),
+              const PopupMenuItem(
+                  value: 'excluir',
+                  child: ListTile(
+                      leading: Icon(Icons.delete_outline),
+                      title: Text('Excluir'))),
             ],
           ),
         ),
@@ -198,7 +216,7 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
 
   try {
     final List<SportWithCategoriesModel> sportsWithCategories =
-    await context.read<SportRepository>().getSportsWithCategories();
+        await context.read<SportRepository>().getSportsWithCategories();
 
     SportWithCategoriesModel? selectedSport;
     CategoryBasicModel? selectedCategory;
@@ -217,7 +235,8 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
                     hint: const Text('1. Selecione um Esporte'),
                     value: selectedSport,
                     items: sportsWithCategories.map((sport) {
-                      return DropdownMenuItem(value: sport, child: Text(sport.nome));
+                      return DropdownMenuItem(
+                          value: sport, child: Text(sport.nome));
                     }).toList(),
                     onChanged: (sport) {
                       setState(() {
@@ -233,15 +252,19 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
                       hint: const Text('2. Selecione uma Categoria'),
                       value: selectedCategory,
                       items: selectedSport!.categorias.map((cat) {
-                        return DropdownMenuItem(value: cat, child: Text(cat.nome));
+                        return DropdownMenuItem(
+                            value: cat, child: Text(cat.nome));
                       }).toList(),
-                      onChanged: (cat) => setState(() => selectedCategory = cat),
+                      onChanged: (cat) =>
+                          setState(() => selectedCategory = cat),
                       validator: (v) => v == null ? 'Campo obrigatório' : null,
                     ),
                 ],
               ),
               actions: [
-                TextButton(onPressed: () => navigator.pop(false), child: const Text('Cancelar')),
+                TextButton(
+                    onPressed: () => navigator.pop(false),
+                    child: const Text('Cancelar')),
                 ElevatedButton(
                   onPressed: (selectedSport != null && selectedCategory != null)
                       ? () => navigator.pop(true)
@@ -256,19 +279,23 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
     );
 
     if (result == true && selectedSport != null && selectedCategory != null) {
-      navigator.push(MaterialPageRoute(
-        builder: (_) => BlocProvider.value(
-          value: cubit,
-          child: TurmaFormScreen(
-            esporteId: selectedSport!.id,
-            categoria: selectedCategory!.nome,
-          ),
-        ),
-      )).then((_) => cubit.fetchTodasTurmas());
+      navigator
+          .push(MaterialPageRoute(
+            builder: (_) => BlocProvider.value(
+              value: cubit,
+              child: TurmaFormScreen(
+                esporteId: selectedSport!.id,
+                categoria: selectedCategory!.nome,
+              ),
+            ),
+          ))
+          .then((_) => cubit.fetchTodasTurmas());
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: Colors.red),
+      SnackBar(
+          content: Text(e.toString().replaceAll('Exception: ', '')),
+          backgroundColor: Colors.red),
     );
   }
 }

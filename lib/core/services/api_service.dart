@@ -11,12 +11,12 @@ class ApiService {
 
   ApiService(this._localStorageService)
       : _dio = Dio(BaseOptions(
-    baseUrl: _baseUrl,
-    headers: {
-      // Este cabeçalho do ngrok não é mais necessário com o Tailscale
-      'Accept': 'application/json',
-    },
-  )) {
+          baseUrl: _baseUrl,
+          headers: {
+            // Este cabeçalho do ngrok não é mais necessário com o Tailscale
+            'Accept': 'application/json',
+          },
+        )) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
