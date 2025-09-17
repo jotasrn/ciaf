@@ -6,8 +6,8 @@ class ApiService {
   final LocalStorageService _localStorageService;
 
   // URL permanente e correta do seu servidor via Tailscale Funnel
-  static const String _baseUrl = 'http://127.0.0.1:5000/api';
-  //static const String _baseUrl = 'https://orangepizero3.taild57440.ts.net/api';
+  //static const String _baseUrl = 'http://127.0.0.1:5000/api';
+  static const String _baseUrl = 'https://orangepizero3.taild57440.ts.net/api';
 
   ApiService(this._localStorageService)
       : _dio = Dio(BaseOptions(

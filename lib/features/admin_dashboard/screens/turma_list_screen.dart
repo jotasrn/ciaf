@@ -29,7 +29,6 @@ class TurmaListScreen extends StatelessWidget {
         final cubit = TurmaManagementCubit(
           RepositoryProvider.of<TurmaRepository>(context),
         );
-        // Decide qual método de busca chamar com base nos filtros recebidos
         if (esporteId != null && categoria != null) {
           cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
         } else {
@@ -136,29 +135,21 @@ class TurmaDataSource extends DataTableSource {
         DataCell(Text(turma.professor.nome)),
         DataCell(
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert),
-            onSelected: (value) {
-              final cubit = context.read<TurmaManagementCubit>();
+            // Tornamos async para poder usar await showTurmaFormDialog
+            onSelected: (value) async {
               if (value == 'editar') {
-                Navigator.of(context)
-                    .push(MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                    value: cubit,
-                    child: TurmaFormScreen(
-                      turma: turma,
-                      esporteId: turma.esporte.id,
-                      categoria: turma.categoria,
-                    ),
-                  ),
-                ))
-                    .then((_) {
-                  if (esporteId != null && categoria != null) {
-                    cubit.fetchTurmas(
-                        esporteId: esporteId!, categoria: categoria!);
-                  } else {
-                    cubit.fetchTodasTurmas();
-                  }
-                });
+                await showTurmaFormDialog(
+                  context: context,
+                  turma: turma,
+                  esporteId: turma.esporte.id,
+                  categoria: turma.categoria,
+                );
+                final cubit = context.read<TurmaManagementCubit>();
+                if (esporteId != null && categoria != null) {
+                  cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
+                } else {
+                  cubit.fetchTodasTurmas();
+                }
               } else if (value == 'excluir') {
                 showDialog(
                   context: context,
@@ -174,6 +165,7 @@ class TurmaDataSource extends DataTableSource {
                         child: const Text('Deletar',
                             style: TextStyle(color: Colors.red)),
                         onPressed: () {
+                          final cubit = context.read<TurmaManagementCubit>();
                           cubit.deleteTurmaById(turma.id);
                           Navigator.of(dialogContext).pop();
                         },
@@ -187,13 +179,11 @@ class TurmaDataSource extends DataTableSource {
               const PopupMenuItem(
                   value: 'editar',
                   child: ListTile(
-                      leading: Icon(Icons.edit_outlined),
-                      title: Text('Editar'))),
+                      leading: Icon(Icons.edit_outlined), title: Text('Editar'))),
               const PopupMenuItem(
                   value: 'excluir',
                   child: ListTile(
-                      leading: Icon(Icons.delete_outline),
-                      title: Text('Excluir'))),
+                      leading: Icon(Icons.delete_outline), title: Text('Excluir'))),
             ],
           ),
         ),
@@ -216,7 +206,7 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
 
   try {
     final List<SportWithCategoriesModel> sportsWithCategories =
-        await context.read<SportRepository>().getSportsWithCategories();
+    await context.read<SportRepository>().getSportsWithCategories();
 
     SportWithCategoriesModel? selectedSport;
     CategoryBasicModel? selectedCategory;
@@ -236,7 +226,9 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
                     value: selectedSport,
                     items: sportsWithCategories.map((sport) {
                       return DropdownMenuItem(
-                          value: sport, child: Text(sport.nome));
+                        value: sport,
+                        child: Text(sport.nome),
+                      );
                     }).toList(),
                     onChanged: (sport) {
                       setState(() {
@@ -244,7 +236,6 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
                         selectedCategory = null;
                       });
                     },
-                    validator: (v) => v == null ? 'Campo obrigatório' : null,
                   ),
                   const SizedBox(height: 16),
                   if (selectedSport != null)
@@ -253,18 +244,20 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
                       value: selectedCategory,
                       items: selectedSport!.categorias.map((cat) {
                         return DropdownMenuItem(
-                            value: cat, child: Text(cat.nome));
+                          value: cat,
+                          child: Text(cat.nome),
+                        );
                       }).toList(),
                       onChanged: (cat) =>
                           setState(() => selectedCategory = cat),
-                      validator: (v) => v == null ? 'Campo obrigatório' : null,
                     ),
                 ],
               ),
               actions: [
                 TextButton(
-                    onPressed: () => navigator.pop(false),
-                    child: const Text('Cancelar')),
+                  onPressed: () => navigator.pop(false),
+                  child: const Text('Cancelar'),
+                ),
                 ElevatedButton(
                   onPressed: (selectedSport != null && selectedCategory != null)
                       ? () => navigator.pop(true)
@@ -278,18 +271,16 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
       },
     );
 
+    // Promotion after await lost — por isso criamos cópias não-nulas:
     if (result == true && selectedSport != null && selectedCategory != null) {
-      navigator
-          .push(MaterialPageRoute(
-            builder: (_) => BlocProvider.value(
-              value: cubit,
-              child: TurmaFormScreen(
-                esporteId: selectedSport!.id,
-                categoria: selectedCategory!.nome,
-              ),
-            ),
-          ))
-          .then((_) => cubit.fetchTodasTurmas());
+      final chosenSport = selectedSport!;
+      final chosenCategory = selectedCategory!;
+      await showTurmaFormDialog(
+        context: context,
+        esporteId: chosenSport.id,
+        categoria: chosenCategory.nome,
+      );
+      cubit.fetchTodasTurmas();
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
