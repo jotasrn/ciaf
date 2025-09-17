@@ -115,9 +115,9 @@ class ShellScreen extends StatelessWidget {
           const AdminHomeScreen(),
           const AdminProfListScreen(),
           const AlunoListScreen(),
+          const CategoryListScreen(),
           const TurmaListScreen(title: 'Gerenciar Turmas'),
           const SportListScreen(),
-          const CategoryListScreen(),
         ];
       case 'professor':
         return [const ProfessorHomeScreen()

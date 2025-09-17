@@ -10,6 +10,7 @@ import 'package:escolinha_futebol_app/core/repositories/dashboard_repository.dar
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/sport_repository.dart';
+import 'package:escolinha_futebol_app/core/repositories/category_repository.dart';
 import 'package:escolinha_futebol_app/core/services/api_service.dart';
 import 'package:escolinha_futebol_app/core/services/local_storage_service.dart';
 import 'package:escolinha_futebol_app/features/auth/cubit/auth_cubit.dart';
@@ -32,6 +33,7 @@ void main() {
     final aulaRepository = AulaRepository(apiService);
     final turmaRepository = TurmaRepository(apiService);
     final sportRepository = SportRepository(apiService);
+    final categoryRepository = CategoryRepository(apiService);
 
     runApp(
       MultiRepositoryProvider(
@@ -42,6 +44,7 @@ void main() {
           RepositoryProvider.value(value: aulaRepository),
           RepositoryProvider.value(value: turmaRepository),
           RepositoryProvider.value(value: sportRepository),
+          RepositoryProvider.value(value: categoryRepository),
         ],
         child: const MyApp(),
       ),

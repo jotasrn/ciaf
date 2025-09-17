@@ -6,7 +6,6 @@ class CategoryManagementCubit extends Cubit<CategoryManagementState> {
   final CategoryRepository _repository;
   CategoryManagementCubit(this._repository) : super(CategoryManagementInitial());
 
-  /// Busca a lista completa de categorias
   Future<void> fetchCategorias() async {
     emit(CategoryManagementLoading());
     try {
@@ -17,18 +16,30 @@ class CategoryManagementCubit extends Cubit<CategoryManagementState> {
     }
   }
 
-  /// Deleta uma categoria e recarrega a lista
+  Future<void> createCategoria(String nome, String esporteId) async {
+    try {
+      await _repository.createCategoria(nome: nome, esporteId: esporteId);
+      fetchCategorias(); // Recarrega a lista
+    } catch (e) {
+      emit(CategoryManagementFailure(e.toString()));
+    }
+  }
+
+  Future<void> updateCategoria(String id, String nome) async {
+    try {
+      await _repository.updateCategoria(id: id, nome: nome);
+      fetchCategorias();
+    } catch (e) {
+      emit(CategoryManagementFailure(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
   Future<void> deleteCategoria(String id) async {
     try {
       await _repository.deleteCategoria(id: id);
       fetchCategorias();
     } catch (e) {
       emit(CategoryManagementFailure(e.toString().replaceAll('Exception: ', '')));
-      // Para garantir que a lista ainda seja exibida mesmo após um erro de delete,
-      // podemos recarregar os dados.
-      fetchCategorias();
     }
   }
-
-// No futuro, podemos adicionar os métodos de criar e atualizar aqui.
 }

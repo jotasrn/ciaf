@@ -131,7 +131,7 @@ class CategorySelectionScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
                         builder: (_) => TurmaListScreen(
-                          title: '${esporteNome} - ${categoria.nome}',
+                          title: '$esporteNome - ${categoria.nome}',
                           esporteId: esporteId,
                           categoria: categoria.nome,
                         ),

@@ -101,7 +101,6 @@ class _AlunoFormDialogContentState extends State<_AlunoFormDialogContent> {
       _respCpfController.text = _cpfMask.maskText(aluno.contatoResponsavel!['cpf'] ?? '');
       _respTelefoneController.text = _telefoneMask.maskText(aluno.contatoResponsavel!['telefone'] ?? '');
     }
-    // TODO: Pré-selecionar a turma do aluno
   }
 
   @override

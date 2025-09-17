@@ -14,11 +14,17 @@ class CategoryModel extends Equatable {
   });
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    // Função auxiliar para extrair o ID de forma segura
+    String safeGetId(dynamic idField) {
+      if (idField is String) return idField;
+      if (idField is Map) return idField['\$oid'] ?? '';
+      return '';
+    }
+
     return CategoryModel(
-      id: (json['_id'] is String ? json['_id'] : json['_id']?['\$oid']) ?? '',
+      id: safeGetId(json['_id']),
       nome: json['nome'] ?? 'Sem nome',
-      esporteId: (json['esporte_id'] is String ? json['esporte_id'] : json['esporte_id']?['\$oid']) ?? '',
-      // Lê o nome do esporte que vem do aggregate do backend
+      esporteId: safeGetId(json['esporte_id']),
       esporteNome: json['esporte_nome'],
     );
   }

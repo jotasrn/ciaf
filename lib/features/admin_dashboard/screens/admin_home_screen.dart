@@ -129,7 +129,7 @@ class _KpiSection extends StatelessWidget {
                 value: state.totalTurmas.toString(),
                 icon: Icons.sports_soccer,
                 color: Colors.orange,
-                onTap: () => context.read<NavigationCubit>().selectPage(3),
+                onTap: () => context.read<NavigationCubit>().selectPage(4),
               ),
               KpiCard(
                 title: 'Não Pagantes',
