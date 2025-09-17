@@ -9,14 +9,16 @@ class TurmaDetailCubit extends Cubit<TurmaDetailState> {
   final TurmaRepository _turmaRepository;
   final AulaRepository _aulaRepository;
 
-  TurmaDetailCubit(this._turmaRepository, this._aulaRepository) : super(TurmaDetailInitial());
+  TurmaDetailCubit(this._turmaRepository, this._aulaRepository)
+      : super(TurmaDetailInitial());
 
   Future<void> fetchTurmaDetails(String turmaId) async {
     emit(TurmaDetailLoading());
     try {
       // Busca os dois conjuntos de dados em paralelo para mais performance
       final results = await Future.wait([
-        _turmaRepository.getTurmaById(turmaId), // Precisaremos criar este método
+        _turmaRepository
+            .getTurmaById(turmaId), // Precisaremos criar este método
         _aulaRepository.getAulasPorTurma(turmaId),
       ]);
 
@@ -29,19 +31,19 @@ class TurmaDetailCubit extends Cubit<TurmaDetailState> {
     }
   }
 
+  // Em lib/features/admin_dashboard/cubit/turma_detail_cubit.dart
+
   Future<void> agendarAulas(String turmaId) async {
-    // Não emite 'loading' para não piscar a tela
-    try {
-      // 1. Chama a API para agendar as aulas
-      await _aulaRepository.agendarAulas(turmaId);
-
-      // 2. Emite o novo estado de SUCESSO DA AÇÃO com uma mensagem
-      emit(const TurmaDetailActionSuccess('Aulas agendadas com sucesso!'));
-
-      // 3. Busca novamente os detalhes para atualizar a lista de aulas na tela
-      await fetchTurmaDetails(turmaId);
-    } catch (e) {
-      emit(TurmaDetailFailure(e.toString()));
+    final currentState = state;
+    if (currentState is TurmaDetailSuccess) {
+      try {
+        await _aulaRepository.agendarAulas(turmaId);
+        emit(const TurmaDetailActionSuccess('Aulas agendadas com sucesso!'));
+        await fetchTurmaDetails(turmaId);
+      } catch (e) {
+        emit(TurmaDetailFailure(e.toString()));
+        emit(currentState);
+      }
     }
   }
 }

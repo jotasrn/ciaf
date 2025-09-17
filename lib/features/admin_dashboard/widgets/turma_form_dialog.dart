@@ -37,12 +37,12 @@ Future<void> showTurmaFormDialog({
   required String categoria,
   TurmaModel? turma,
 }) async {
+  // Passa o Cubit da lista para que o formulário possa recarregá-la
   final turmaManagementCubit = context.read<TurmaManagementCubit>();
   await showDialog(
     context: context,
     builder: (dialogContext) {
-      // Provê o Cubit da lista de turmas para que o formulário possa
-      // recarregá-la após a submissão.
+      // Provê o Cubit da lista de turmas para o diálogo
       return BlocProvider.value(
         value: turmaManagementCubit,
         child: _TurmaFormDialogContent(
@@ -190,9 +190,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
           title: Text(_isEditing ? 'Editar Turma' : 'Nova Turma'),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.6,
-            child: (state is TurmaFormLoading || state is TurmaFormInitial)
-                ? const Center(child: CircularProgressIndicator())
-                : _buildForm(context, state as TurmaFormDataReady),
+            child: _buildDialogContent(state),
           ),
           actions: [
             TextButton(
@@ -214,17 +212,25 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
     );
   }
 
-  Widget _buildForm(BuildContext context, TurmaFormDataReady state) {
-    if (_isEditing && !_fieldsInitialized && state.turmaExistente != null) {
-      _initializeFields(state.turmaExistente!);
+  Widget _buildDialogContent(TurmaFormState state) {
+    if (state is TurmaFormLoading || state is TurmaFormInitial) {
+      return const Center(child: CircularProgressIndicator());
     }
+    if (state is TurmaFormDataReady) {
+      if (_isEditing && !_fieldsInitialized && state.turmaExistente != null) {
+        _initializeFields(state.turmaExistente!);
+      }
+      return _buildForm(state.professores, state.alunos);
+    }
+    return const Center(child: Text('Erro ao carregar dados do formulário.'));
+  }
 
-    // Garante que o professor da turma esteja na lista, mesmo se estiver inativo
+  Widget _buildForm(List<UserModel> professores, List<UserModel> alunos) {
     if (_isEditing &&
         _selectedProfessorId != null &&
-        !state.professores.any((p) => p.id == _selectedProfessorId)) {
+        !professores.any((p) => p.id == _selectedProfessorId)) {
       if (widget.turma != null) {
-        state.professores.insert(
+        professores.insert(
             0,
             UserModel(
                 id: widget.turma!.professor.id,
@@ -251,7 +257,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
             DropdownButtonFormField<String>(
               value: _selectedProfessorId,
               decoration: const InputDecoration(labelText: 'Professor'),
-              items: state.professores
+              items: professores
                   .map(
                       (p) => DropdownMenuItem(value: p.id, child: Text(p.nome)))
                   .toList(),
@@ -351,7 +357,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
             Text('Alunos', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             MultiSelectDialogField<String>(
-              items: state.alunos
+              items: alunos
                   .map((a) => MultiSelectItem<String>(a.id, a.nome))
                   .toList(),
               initialValue: _selectedAlunosIds,
