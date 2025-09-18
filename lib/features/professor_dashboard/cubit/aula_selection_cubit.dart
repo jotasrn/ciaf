@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
-// Reutilizamos o mesmo arquivo de estado, pois a estrutura de dados é a mesma
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/chamadas_do_dia_state.dart';
 
 class AulaSelectionCubit extends Cubit<ChamadasDoDiaState> {
@@ -12,7 +11,7 @@ class AulaSelectionCubit extends Cubit<ChamadasDoDiaState> {
   Future<void> fetchAulasDaTurma(String turmaId) async {
     emit(ChamadasDoDiaLoading());
     try {
-      final aulas = await _aulaRepository.getAulasPorTurma(turmaId);
+      final aulas = await _aulaRepository.getAulasByTurma(turmaId);
       // Usamos o estado de sucesso, a data selecionada não é relevante aqui
       // mas o estado exige, então passamos a data atual.
       emit(ChamadasDoDiaSuccess(aulas, DateTime.now()));

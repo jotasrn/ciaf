@@ -50,7 +50,7 @@ class _UserFormDialogContentState extends State<_UserFormDialogContent> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.user?.nome ?? '');
+    _nameController = TextEditingController(text: widget.user?.nomeCompleto ?? '');
     _emailController = TextEditingController(text: widget.user?.email ?? '');
     _passwordController = TextEditingController();
     _selectedProfile = widget.user?.perfil;

@@ -10,28 +10,36 @@ class TurmaDetailCubit extends Cubit<TurmaDetailState> {
   final AulaRepository _aulaRepository;
 
   TurmaDetailCubit(this._turmaRepository, this._aulaRepository)
-      : super(TurmaDetailInitial());
+      : super(const TurmaDetailInitial());
 
   Future<void> fetchTurmaDetails(String turmaId) async {
-    emit(TurmaDetailLoading());
+    if (state is! TurmaDetailSuccess) {
+      emit(const TurmaDetailLoading());
+    }
+
     try {
-      // Busca os dois conjuntos de dados em paralelo para mais performance
       final results = await Future.wait([
-        _turmaRepository
-            .getTurmaById(turmaId), // Precisaremos criar este método
-        _aulaRepository.getAulasPorTurma(turmaId),
+        _turmaRepository.getTurmaById(turmaId),
+        _aulaRepository.getAulasByTurma(turmaId),
       ]);
 
-      final turma = results[0] as TurmaModel;
+      final turma = results[0] as TurmaModel?;
       final aulas = results[1] as List<AulaResumoModel>;
+
+      if (turma == null) {
+        emit(const TurmaDetailFailure('Turma não encontrada.'));
+        return;
+      }
 
       emit(TurmaDetailSuccess(turma: turma, aulas: aulas));
     } catch (e) {
-      emit(TurmaDetailFailure(e.toString()));
+      emit(TurmaDetailFailure(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
-  // Em lib/features/admin_dashboard/cubit/turma_detail_cubit.dart
+  Future<void> refreshTurmaDetails(String turmaId) async {
+    await fetchTurmaDetails(turmaId);
+  }
 
   Future<void> agendarAulas(String turmaId) async {
     final currentState = state;
@@ -39,9 +47,9 @@ class TurmaDetailCubit extends Cubit<TurmaDetailState> {
       try {
         await _aulaRepository.agendarAulas(turmaId);
         emit(const TurmaDetailActionSuccess('Aulas agendadas com sucesso!'));
-        await fetchTurmaDetails(turmaId);
+        await refreshTurmaDetails(turmaId);
       } catch (e) {
-        emit(TurmaDetailFailure(e.toString()));
+        emit(TurmaDetailFailure(e.toString().replaceAll('Exception: ', '')));
         emit(currentState);
       }
     }

@@ -24,11 +24,13 @@ class TurmaListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A tela continua autônoma, criando seu próprio Cubit.
     return BlocProvider(
       create: (context) {
         final cubit = TurmaManagementCubit(
           RepositoryProvider.of<TurmaRepository>(context),
         );
+        // Lógica para carregar todas as turmas ou turmas filtradas.
         if (esporteId != null && categoria != null) {
           cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
         } else {
@@ -65,19 +67,20 @@ class _TurmaListView extends StatelessWidget {
           if (state is TurmaManagementFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(state.message), backgroundColor: Colors.red),
+                  content: Text(state.message.replaceAll('Exception: ', '')),
+                  backgroundColor: Colors.red),
             );
           }
         },
         builder: (context, state) {
-          if (state is TurmaManagementLoading ||
-              state is TurmaManagementInitial) {
+          if (state is TurmaManagementLoading || state is TurmaManagementInitial) {
             return const Center(child: CircularProgressIndicator());
           }
           if (state is TurmaManagementSuccess) {
             if (state.turmas.isEmpty) {
               return const Center(child: Text('Nenhuma turma encontrada.'));
             }
+            // Sua estrutura com PaginatedDataTable2 está mantida.
             return PaginatedDataTable2(
               columns: const [
                 DataColumn(label: Text('Nome da Turma')),
@@ -96,7 +99,9 @@ class _TurmaListView extends StatelessWidget {
               showCheckboxColumn: false,
             );
           }
-          return const Center(child: Text('Ocorreu um erro.'));
+          // Fallback para qualquer outro estado de erro.
+          return const Center(
+              child: Text('Ocorreu um erro ao carregar as turmas.'));
         },
       ),
       floatingActionButton: Builder(builder: (buttonContext) {
@@ -115,6 +120,7 @@ class TurmaDataSource extends DataTableSource {
   final BuildContext context;
   final String? esporteId;
   final String? categoria;
+
   TurmaDataSource(this.turmas, this.context, {this.esporteId, this.categoria});
 
   @override
@@ -130,12 +136,13 @@ class TurmaDataSource extends DataTableSource {
       },
       cells: [
         DataCell(Text(turma.nome)),
+        // ✅ CORRETO: Acessa a propriedade 'nome' do objeto 'esporte'.
         DataCell(Text(turma.esporte.nome)),
         DataCell(Text(turma.categoria)),
+        // ✅ CORRETO: Acessa a propriedade 'nome' do objeto 'professor'.
         DataCell(Text(turma.professor.nome)),
         DataCell(
           PopupMenuButton<String>(
-            // Tornamos async para poder usar await showTurmaFormDialog
             onSelected: (value) async {
               if (value == 'editar') {
                 await showTurmaFormDialog(
@@ -144,6 +151,7 @@ class TurmaDataSource extends DataTableSource {
                   esporteId: turma.esporte.id,
                   categoria: turma.categoria,
                 );
+                // Atualiza a lista após a edição
                 final cubit = context.read<TurmaManagementCubit>();
                 if (esporteId != null && categoria != null) {
                   cubit.fetchTurmas(esporteId: esporteId!, categoria: categoria!);
@@ -155,8 +163,7 @@ class TurmaDataSource extends DataTableSource {
                   context: context,
                   builder: (dialogContext) => AlertDialog(
                     title: const Text('Confirmar Exclusão'),
-                    content: Text(
-                        'Tem certeza que deseja deletar a turma "${turma.nome}"?'),
+                    content: Text('Tem certeza que deseja deletar a turma "${turma.nome}"?'),
                     actions: [
                       TextButton(
                           child: const Text('Cancelar'),
@@ -165,8 +172,7 @@ class TurmaDataSource extends DataTableSource {
                         child: const Text('Deletar',
                             style: TextStyle(color: Colors.red)),
                         onPressed: () {
-                          final cubit = context.read<TurmaManagementCubit>();
-                          cubit.deleteTurmaById(turma.id);
+                          context.read<TurmaManagementCubit>().deleteTurmaById(turma.id);
                           Navigator.of(dialogContext).pop();
                         },
                       ),
@@ -199,12 +205,14 @@ class TurmaDataSource extends DataTableSource {
   int get selectedRowCount => 0;
 }
 
+
 /// Função que exibe o diálogo de dois passos para criar uma turma
 Future<void> showCreateTurmaDialog(BuildContext context) async {
   final navigator = Navigator.of(context);
   final cubit = context.read<TurmaManagementCubit>();
 
   try {
+    // Busca os esportes com suas respectivas categorias
     final List<SportWithCategoriesModel> sportsWithCategories =
     await context.read<SportRepository>().getSportsWithCategories();
 
@@ -218,40 +226,44 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Criar Nova Turma: Selecione'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<SportWithCategoriesModel>(
-                    hint: const Text('1. Selecione um Esporte'),
-                    value: selectedSport,
-                    items: sportsWithCategories.map((sport) {
-                      return DropdownMenuItem(
-                        value: sport,
-                        child: Text(sport.nome),
-                      );
-                    }).toList(),
-                    onChanged: (sport) {
-                      setState(() {
-                        selectedSport = sport;
-                        selectedCategory = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  if (selectedSport != null)
-                    DropdownButtonFormField<CategoryBasicModel>(
-                      hint: const Text('2. Selecione uma Categoria'),
-                      value: selectedCategory,
-                      items: selectedSport!.categorias.map((cat) {
+              content: SingleChildScrollView( // Para evitar overflow em telas pequenas
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<SportWithCategoriesModel>(
+                      isExpanded: true,
+                      hint: const Text('1. Selecione um Esporte'),
+                      value: selectedSport,
+                      items: sportsWithCategories.map((sport) {
                         return DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat.nome),
+                          value: sport,
+                          child: Text(sport.nome),
                         );
                       }).toList(),
-                      onChanged: (cat) =>
-                          setState(() => selectedCategory = cat),
+                      onChanged: (sport) {
+                        setState(() {
+                          selectedSport = sport;
+                          selectedCategory = null;
+                        });
+                      },
                     ),
-                ],
+                    const SizedBox(height: 16),
+                    if (selectedSport != null)
+                      DropdownButtonFormField<CategoryBasicModel>(
+                        isExpanded: true,
+                        hint: const Text('2. Selecione uma Categoria'),
+                        value: selectedCategory,
+                        items: selectedSport!.categorias.map((cat) {
+                          return DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat.nome),
+                          );
+                        }).toList(),
+                        onChanged: (cat) =>
+                            setState(() => selectedCategory = cat),
+                      ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -271,22 +283,25 @@ Future<void> showCreateTurmaDialog(BuildContext context) async {
       },
     );
 
-    // Promotion after await lost — por isso criamos cópias não-nulas:
     if (result == true && selectedSport != null && selectedCategory != null) {
       final chosenSport = selectedSport!;
       final chosenCategory = selectedCategory!;
+      // Chama o formulário final passando os dados selecionados
       await showTurmaFormDialog(
         context: context,
         esporteId: chosenSport.id,
         categoria: chosenCategory.nome,
       );
+      // Recarrega as turmas após o diálogo ser fechado.
       cubit.fetchTodasTurmas();
     }
   } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
-          backgroundColor: Colors.red),
-    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red),
+      );
+    }
   }
 }

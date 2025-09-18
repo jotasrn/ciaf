@@ -48,7 +48,7 @@ class AuthRepository {
     final Map<String, dynamic> payload = Jwt.parseJwt(token);
     return UserModel(
       id: payload['sub'],
-      nome: payload['nome_completo'],
+      nomeCompleto: payload['nome_completo'],
       email: email ?? 'email.nao.fornecido',
       perfil: payload['perfil'],
       ativo: true,

@@ -89,7 +89,7 @@ class _AdminProfDataSource extends DataTableSource {
   DataRow2 getRow(int index) {
     final user = users[index];
     return DataRow2.byIndex(index: index, cells: [
-      DataCell(Text(user.nome)),
+      DataCell(Text(user.nomeCompleto)),
       DataCell(Text(user.email)),
       DataCell(Chip(label: Text(user.perfil))),
       DataCell(PopupMenuButton<String>(
@@ -109,7 +109,7 @@ class _AdminProfDataSource extends DataTableSource {
               builder: (dialogContext) => AlertDialog(
                 title: const Text('Confirmar Ação'),
                 content: Text(
-                    'Tem certeza que deseja desativar o usuário ${user.nome}?'),
+                    'Tem certeza que deseja desativar o usuário ${user.nomeCompleto}?'),
                 actions: [
                   TextButton(
                     child: const Text('Cancelar'),

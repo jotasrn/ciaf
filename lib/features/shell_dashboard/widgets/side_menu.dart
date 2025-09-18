@@ -23,14 +23,14 @@ class SideMenuWidget extends StatelessWidget {
         children: [
           // Cabeçalho com dados do usuário
           UserAccountsDrawerHeader(
-            accountName: Text(user.nome,
+            accountName: Text(user.nomeCompleto,
                 style:
                 const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             accountEmail: Text(user.email),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
               child: Text(
-                user.nome.isNotEmpty ? user.nome[0].toUpperCase() : 'U',
+                user.nomeCompleto.isNotEmpty ? user.nomeCompleto[0].toUpperCase() : 'U',
                 style: TextStyle(fontSize: 32, color: primaryColor),
               ),
             ),

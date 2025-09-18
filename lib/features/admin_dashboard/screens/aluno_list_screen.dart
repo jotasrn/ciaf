@@ -123,7 +123,7 @@ class _AlunoDataSource extends DataTableSource {
     }
 
     return DataRow2.byIndex(index: index, cells: [
-      DataCell(Text(user.nome)),
+      DataCell(Text(user.nomeCompleto)),
       DataCell(
         Text(
           dataVencimento != null ? DateFormat('dd/MM/yyyy').format(dataVencimento) : '--/--/----',
@@ -159,7 +159,7 @@ class _AlunoDataSource extends DataTableSource {
               context: context,
               builder: (dialogContext) => AlertDialog(
                 title: const Text('Confirmar Ação'),
-                content: Text('Tem certeza que deseja desativar o aluno ${user.nome}?'),
+                content: Text('Tem certeza que deseja desativar o aluno ${user.nomeCompleto}?'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),

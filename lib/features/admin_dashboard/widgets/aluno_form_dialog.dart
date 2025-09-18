@@ -87,7 +87,7 @@ class _AlunoFormDialogContentState extends State<_AlunoFormDialogContent> {
   }
 
   void _preencherCamposParaEdicao(UserModel aluno) {
-    _nomeController.text = aluno.nome;
+    _nomeController.text = aluno.nomeCompleto;
     _emailController.text = aluno.email;
 
     if (aluno.dataNascimento != null) {

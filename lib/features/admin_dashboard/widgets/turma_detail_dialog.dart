@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
+import 'package:escolinha_futebol_app/core/models/turma_model.dart';
 import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/turma_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_detail_cubit.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/turma_detail_state.dart';
+import 'package:escolinha_futebol_app/core/utils/string_extensions.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/admin_chamada_screen.dart';
 
 Future<void> showTurmaDetailDialog({
@@ -12,17 +15,24 @@ Future<void> showTurmaDetailDialog({
   required String turmaId,
   required String turmaNome,
 }) async {
-  // O Cubit da lista de turmas não é necessário aqui, pois cada diálogo é autônomo
   await showDialog(
     context: context,
     builder: (dialogContext) {
-      return BlocProvider(
-        create: (context) => TurmaDetailCubit(
-          context.read<TurmaRepository>(),
-          context.read<AulaRepository>(),
-        )..fetchTurmaDetails(turmaId),
-        child:
-            _TurmaDetailDialogContent(turmaId: turmaId, turmaNome: turmaNome),
+      final screenWidth = MediaQuery.of(dialogContext).size.width;
+      final dialogWidth = screenWidth > 800 ? screenWidth * 0.7 : screenWidth * 0.9;
+
+      return Dialog(
+        insetPadding: const EdgeInsets.all(20),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: dialogWidth),
+          child: BlocProvider(
+            create: (context) => TurmaDetailCubit(
+              context.read<TurmaRepository>(),
+              context.read<AulaRepository>(),
+            )..fetchTurmaDetails(turmaId),
+            child: _TurmaDetailDialogContent(turmaId: turmaId, turmaNome: turmaNome),
+          ),
+        ),
       );
     },
   );
@@ -31,142 +41,124 @@ Future<void> showTurmaDetailDialog({
 class _TurmaDetailDialogContent extends StatelessWidget {
   final String turmaId;
   final String turmaNome;
-  const _TurmaDetailDialogContent(
-      {required this.turmaId, required this.turmaNome});
+
+  const _TurmaDetailDialogContent({required this.turmaId, required this.turmaNome});
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      contentPadding: EdgeInsets.zero,
-      content: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.7,
-        height: MediaQuery.of(context).size.height * 0.8,
-        child: DefaultTabController(
-          length: 3,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(turmaNome,
-                        style: Theme.of(context).textTheme.headlineSmall),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ],
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Detalhes da Turma: $turmaNome',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              const TabBar(
-                tabs: [
-                  Tab(icon: Icon(Icons.info_outline), text: 'Visão Geral'),
-                  Tab(icon: Icon(Icons.group), text: 'Alunos'),
-                  Tab(icon: Icon(Icons.event_available), text: 'Aulas'),
-                ],
-              ),
-              const Divider(height: 1),
-              Expanded(
-                child: BlocConsumer<TurmaDetailCubit, TurmaDetailState>(
-                  listener: (context, state) {
-                    if (state is TurmaDetailActionSuccess) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: Colors.green),
-                      );
-                    }
-                    if (state is TurmaDetailFailure) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: Colors.red),
-                      );
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is TurmaDetailLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state is TurmaDetailSuccess) {
-                      return TabBarView(
-                        children: [
-                          _buildVisaoGeralTab(context, state),
-                          _buildAlunosTab(context, state),
-                          _buildAulasTab(context, state),
-                        ],
-                      );
-                    }
-                    return const Center(
-                        child: Text('Erro ao carregar detalhes.'));
-                  },
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-              ),
+              ],
+            ),
+          ),
+          const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.info_outline), text: 'Visão Geral'),
+              Tab(icon: Icon(Icons.group), text: 'Alunos'),
+              Tab(icon: Icon(Icons.event_available), text: 'Aulas e Horários'),
             ],
           ),
-        ),
+          const Divider(height: 1),
+          Flexible(
+            child: BlocConsumer<TurmaDetailCubit, TurmaDetailState>(
+              listener: (context, state) {
+                if (!context.mounted) return;
+                if (state is TurmaDetailActionSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Colors.green),
+                  );
+                }
+                if (state is TurmaDetailFailure) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+                  );
+                }
+              },
+              builder: (context, state) {
+                if (state is TurmaDetailLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (state is TurmaDetailSuccess) {
+                  return TabBarView(
+                    children: [
+                      _buildVisaoGeralTab(context, state),
+                      _buildAlunosTab(context, state),
+                      _buildAulasTab(context, state, turmaId), // Passa o turmaId
+                    ],
+                  );
+                }
+                return const Center(child: Text('Erro ao carregar detalhes.'));
+              },
+            ),
+          ),
+        ],
       ),
-      actions: [
-        // Botão de Agendamento agora fica nas ações do Diálogo
-        TextButton.icon(
-          icon: const Icon(Icons.event),
-          label: const Text('Agendar Aulas (Próximo Mês)'),
-          onPressed: () {
-            context.read<TurmaDetailCubit>().agendarAulas(turmaId);
-          },
-        ),
-      ],
     );
   }
 
   Widget _buildVisaoGeralTab(BuildContext context, TurmaDetailSuccess state) {
+    final turma = state.turma;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       children: [
-        ListTile(
-            title: const Text('Nome da Turma'),
-            subtitle: Text(state.turma.nome)),
-        ListTile(
-            title: const Text('Esporte'),
-            subtitle: Text(state.turma.esporte.nome)),
-        ListTile(
-            title: const Text('Categoria'),
-            subtitle: Text(state.turma.categoria)),
-        ListTile(
-            title: const Text('Professor'),
-            subtitle: Text(state.turma.professor.nome)),
-        ListTile(
-            title: const Text('Total de Alunos'),
-            subtitle: Text(state.turma.alunos.length.toString())),
+        _buildInfoTile(context, Icons.sports_soccer, 'Esporte', turma.esporte.nome),
+        _buildInfoTile(context, Icons.category, 'Categoria', turma.categoria),
+        _buildInfoTile(context, Icons.person_outline, 'Professor', turma.professor.nome),
+        _buildInfoTile(context, Icons.group_outlined, 'Total de Alunos', turma.alunos.length.toString()),
       ],
+    );
+  }
+
+  Widget _buildInfoTile(BuildContext context, IconData icon, String title, String subtitle) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: Theme.of(context).primaryColor),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodyLarge),
     );
   }
 
   Widget _buildAlunosTab(BuildContext context, TurmaDetailSuccess state) {
     return Scaffold(
-      // Usamos um Scaffold interno para ter um FloatingActionButton
       body: state.turma.alunos.isEmpty
           ? const Center(child: Text('Nenhum aluno vinculado a esta turma.'))
           : ListView.builder(
-              itemCount: state.turma.alunos.length,
-              itemBuilder: (context, index) {
-                final aluno = state.turma.alunos[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                      child: Text(aluno.nome.isNotEmpty ? aluno.nome[0] : '')),
-                  title: Text(aluno.nome),
-                  subtitle: Text(aluno.email),
-                );
-              },
+        padding: const EdgeInsets.all(16),
+        itemCount: state.turma.alunos.length,
+        itemBuilder: (context, index) {
+          final aluno = state.turma.alunos[index];
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(child: Text(aluno.nomeCompleto.isNotEmpty ? aluno.nomeCompleto[0] : '')),
+              title: Text(aluno.nomeCompleto),
+              subtitle: Text(aluno.email),
             ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implementar diálogo para buscar e adicionar aluno existente
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Funcionalidade para adicionar aluno existente em breve!')),
+            const SnackBar(content: Text('Funcionalidade para adicionar aluno existente em breve!')),
           );
         },
         tooltip: 'Adicionar Aluno Existente',
@@ -175,25 +167,143 @@ class _TurmaDetailDialogContent extends StatelessWidget {
     );
   }
 
-  Widget _buildAulasTab(BuildContext context, TurmaDetailSuccess state) {
-    if (state.aulas.isEmpty) {
-      return const Center(
-          child: Text('Nenhuma aula agendada para esta turma.'));
-    }
-    return ListView.separated(
-      itemCount: state.aulas.length,
-      itemBuilder: (context, index) {
-        final aula = state.aulas[index];
-        return ListTile(
-          leading: const Icon(Icons.calendar_today_outlined),
-          title: Text(
-              'Aula de ${DateFormat('dd/MM/yyyy \'às\' HH:mm').format(aula.data)}'),
-          subtitle: Text(
-              'Presença: ${aula.totalPresentes} de ${aula.totalAlunosNaTurma}'),
-          onTap: () {/* TODO: Navegar para AdminChamadaScreen */},
-        );
-      },
-      separatorBuilder: (_, __) => const Divider(),
+  Widget _buildAulasTab(BuildContext context, TurmaDetailSuccess state, String turmaId) {
+    final List<AulaResumoModel> aulasProjetadas = _gerarAulasProjetadas(state.turma, state.aulas);
+    final hoje = DateTime.now();
+    final aulasAnteriores = state.aulas.where((aula) =>
+    aula.data.year < hoje.year || (aula.data.year == hoje.year && aula.data.month < hoje.month)
+    ).toList();
+    aulasAnteriores.sort((a, b) => b.data.compareTo(a.data));
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text('Aulas do Mês Atual', style: Theme.of(context).textTheme.titleLarge),
+        const Divider(),
+        if (aulasProjetadas.isEmpty)
+          const Center(child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Nenhum horário fixo definido para este mês.'),
+          ))
+        else
+          ...aulasProjetadas.map((aula) {
+            final chamadaRealizada = aula.status == 'Realizada';
+
+            return Card(
+              color: aula.id.isEmpty ? Colors.blue.shade50 : null,
+              child: ListTile(
+                leading: Icon(
+                  chamadaRealizada ? Icons.check_circle : Icons.event_note,
+                  color: chamadaRealizada ? Colors.green : Colors.grey,
+                ),
+                title: Text('Aula de ${DateFormat('dd/MM/yyyy \'às\' HH:mm', 'pt_BR').format(aula.data)}'),
+                subtitle: Text('Status: ${aula.status} | Presença: ${aula.totalPresentes}/${aula.totalAlunosNaTurma}'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                // ✅ LÓGICA DE NAVEGAÇÃO E ATUALIZAÇÃO
+                onTap: () async { // 1. Transforma o onTap em async
+                  if (!context.mounted) return;
+
+                  if (aula.id.isNotEmpty) { // Só permite clique em aulas que existem
+                    // 2. Espera a tela de chamada ser fechada
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => AdminChamadaScreen(
+                          aulaId: aula.id,
+                          turmaNome: aula.turmaNome,
+                        ),
+                      ),
+                    );
+
+                    // 3. Após voltar, chama a função de refresh
+                    if (context.mounted) {
+                      context.read<TurmaDetailCubit>().refreshTurmaDetails(turmaId);
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Esta aula precisa ser gerada no sistema primeiro.')),
+                    );
+                  }
+                },
+              ),
+            );
+          }),
+
+        const SizedBox(height: 32),
+
+        Text('Histórico de Aulas (Meses Anteriores)', style: Theme.of(context).textTheme.titleLarge),
+        const Divider(),
+        if (aulasAnteriores.isEmpty)
+          const Center(child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Nenhum registro de aulas de meses anteriores.'),
+          ))
+        else
+          ...aulasAnteriores.map((aula) {
+            return Card(
+              child: ListTile(
+                leading: const Icon(Icons.history, color: Colors.blueGrey),
+                title: Text('Aula de ${DateFormat('dd/MM/yyyy \'às\' HH:mm', 'pt_BR').format(aula.data)}'),
+                subtitle: Text('Status: ${aula.status} | Presença: ${aula.totalPresentes}/${aula.totalAlunosNaTurma}'),
+                trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                onTap: () async {
+                  if (!context.mounted) return;
+
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AdminChamadaScreen(
+                        aulaId: aula.id,
+                        turmaNome: aula.turmaNome,
+                      ),
+                    ),
+                  );
+
+                  if (context.mounted) {
+                    context.read<TurmaDetailCubit>().refreshTurmaDetails(turmaId);
+                  }
+                },
+              ),
+            );
+          }),
+      ],
     );
+  }
+
+  List<AulaResumoModel> _gerarAulasProjetadas(TurmaModel turma, List<AulaResumoModel> aulasExistentes) {
+    if (turma.horarios.isEmpty) return [];
+
+    final diasDaSemana = { 1: 'segunda', 2: 'terca', 3: 'quarta', 4: 'quinta', 5: 'sexta', 6: 'sabado', 7: 'domingo' };
+    final aulasSalvasPorData = { for (var aula in aulasExistentes) DateFormat('yyyy-MM-dd HH:mm').format(aula.data): aula };
+    final List<AulaResumoModel> aulasProjetadas = [];
+    final hoje = DateTime.now();
+    final primeiroDiaDoMes = DateTime(hoje.year, hoje.month, 1);
+    final ultimoDiaDoMes = DateTime(hoje.year, hoje.month + 1, 0);
+
+    for (int i = 0; i < ultimoDiaDoMes.day; i++) {
+      final diaAtual = primeiroDiaDoMes.add(Duration(days: i));
+      final nomeDiaSemana = diasDaSemana[diaAtual.weekday];
+      for (var horario in turma.horarios) {
+        if (horario['dia_semana'] == nomeDiaSemana) {
+          final horaInicio = (horario['hora_inicio'] ?? '00:00').split(':');
+          final dataDaAula = DateTime(diaAtual.year, diaAtual.month, diaAtual.day, int.parse(horaInicio[0]), int.parse(horaInicio[1]));
+          final chaveData = DateFormat('yyyy-MM-dd HH:mm').format(dataDaAula);
+
+          if (aulasSalvasPorData.containsKey(chaveData)) {
+            aulasProjetadas.add(aulasSalvasPorData[chaveData]!);
+          } else {
+            aulasProjetadas.add(AulaResumoModel(
+              id: '',
+              data: dataDaAula,
+              totalAlunosNaTurma: turma.alunos.length,
+              totalPresentes: 0,
+              status: 'Projetada',
+              turmaNome: turma.nome,
+              esporteNome: turma.esporte.nome,
+            ));
+          }
+        }
+      }
+    }
+    aulasProjetadas.sort((a, b) => a.data.compareTo(b.data));
+    return aulasProjetadas;
   }
 }

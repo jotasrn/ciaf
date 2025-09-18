@@ -117,12 +117,7 @@ class _KpiSection extends StatelessWidget {
                 value: state.totalAlunos.toString(),
                 icon: Icons.group,
                 color: Colors.blue,
-                onTap: () {
-                  // Navega para a nova tela de alunos
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const AlunoListScreen(),
-                  ));
-                },
+                onTap: () => context.read<NavigationCubit>().selectPage(2),
               ),
               KpiCard(
                 title: 'Turmas',

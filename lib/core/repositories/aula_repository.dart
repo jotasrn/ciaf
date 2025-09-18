@@ -17,14 +17,13 @@ class AulaRepository {
       final response = await _apiService.dio
           .get('/aulas/por-data', queryParameters: {'data': dataString});
       final List<dynamic> data = response.data;
-      // Mapeia a lista de JSON para a lista de AulaResumoModel
       return data.map((json) => AulaResumoModel.fromJson(json)).toList();
     } on DioException {
       throw Exception('Falha ao buscar as aulas do dia.');
     }
   }
 
-  Future<List<AulaResumoModel>> getAulasPorTurma(String turmaId) async {
+  Future<List<AulaResumoModel>> getAulasByTurma(String turmaId) async {
     try {
       final response = await _apiService.dio.get('/aulas/turma/$turmaId');
       final List<dynamic> data = response.data;
@@ -40,7 +39,8 @@ class AulaRepository {
       final responseData = response.data as Map<String, dynamic>;
 
       final List<dynamic> alunosJson = responseData['alunos'];
-      final alunos = alunosJson.map((json) => AlunoChamadaModel.fromJson(json)).toList();
+      final alunos =
+      alunosJson.map((json) => AlunoChamadaModel.fromJson(json)).toList();
 
       final data = DateTime.parse(responseData['data']['\$date']);
 
@@ -62,10 +62,9 @@ class AulaRepository {
 
   Future<void> agendarAulas(String turmaId) async {
     try {
-      await _apiService.dio.post('/aulas/turma/$turmaId/agendar');
+      await _apiService.dio.post('/aulas/agendar-mes', data: {'turma_id': turmaId});
     } on DioException catch (e) {
       throw Exception(e.response?.data['mensagem'] ?? 'Falha ao agendar aulas.');
     }
   }
 }
-

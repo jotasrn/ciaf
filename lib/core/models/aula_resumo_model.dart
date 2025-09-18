@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:escolinha_futebol_app/core/utils/safe_parsers.dart';
 
 class AulaResumoModel extends Equatable {
   final String id;
@@ -21,10 +22,9 @@ class AulaResumoModel extends Equatable {
 
   factory AulaResumoModel.fromJson(Map<String, dynamic> json) {
     return AulaResumoModel(
-      id: (json['_id'] is String ? json['_id'] : json['_id']?['\$oid']) ?? '',
-      // Se a data for nula, usa uma data padrão para não quebrar o app
-      data: json['data']?['\$date'] != null ? DateTime.parse(json['data']['\$date']) : DateTime(1970),
-      status: json['status'] ?? 'indefinido',
+      id: safeGetId(json['_id']),
+      data: safeParseDate(json['data']) ?? DateTime(1970),
+      status: json['status'] ?? 'Agendada',
       turmaNome: json['turma_nome'] ?? 'N/A',
       esporteNome: json['esporte_nome'] ?? 'N/A',
       totalAlunosNaTurma: json['total_alunos_na_turma'] ?? 0,
@@ -33,5 +33,13 @@ class AulaResumoModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, data, status, turmaNome, esporteNome, totalAlunosNaTurma, totalPresentes];
+  List<Object?> get props => [
+    id,
+    data,
+    status,
+    turmaNome,
+    esporteNome,
+    totalAlunosNaTurma,
+    totalPresentes
+  ];
 }

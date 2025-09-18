@@ -234,7 +234,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
             0,
             UserModel(
                 id: widget.turma!.professor.id,
-                nome: '${widget.turma!.professor.nome} (Inativo)',
+                nomeCompleto: '${widget.turma!.professor.nome} (Inativo)',
                 email: '',
                 perfil: 'professor',
                 ativo: false,
@@ -259,7 +259,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
               decoration: const InputDecoration(labelText: 'Professor'),
               items: professores
                   .map(
-                      (p) => DropdownMenuItem(value: p.id, child: Text(p.nome)))
+                      (p) => DropdownMenuItem(value: p.id, child: Text(p.nomeCompleto)))
                   .toList(),
               onChanged: (id) => setState(() => _selectedProfessorId = id),
               validator: (id) => id == null ? 'Selecione um professor' : null,
@@ -358,7 +358,7 @@ class _TurmaFormViewState extends State<_TurmaFormView> {
             const SizedBox(height: 8),
             MultiSelectDialogField<String>(
               items: alunos
-                  .map((a) => MultiSelectItem<String>(a.id, a.nome))
+                  .map((a) => MultiSelectItem<String>(a.id, a.nomeCompleto))
                   .toList(),
               initialValue: _selectedAlunosIds,
               title: const Text("Alunos"),
