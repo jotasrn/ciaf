@@ -68,23 +68,23 @@ class _ChamadaView extends StatelessWidget {
       body: _buildBody(context, currentState),
       floatingActionButton: (currentState is ChamadaSuccess)
           ? FloatingActionButton.extended(
-        onPressed: () {
-          context.read<ChamadaCubit>().submeterChamada(aulaId);
-        },
-        label: const Text('Finalizar Chamada'),
-        icon: const Icon(Icons.check),
-      )
+              onPressed: () {
+                context.read<ChamadaCubit>().submeterChamada(aulaId);
+              },
+              label: const Text('Finalizar Chamada'),
+              icon: const Icon(Icons.check),
+            )
           : (currentState is ChamadaSubmitting
-          ? FloatingActionButton.extended(
-        onPressed: null,
-        label: const Text('Enviando...'),
-        icon: const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-                color: Colors.white, strokeWidth: 2)),
-      )
-          : null),
+              ? FloatingActionButton.extended(
+                  onPressed: null,
+                  label: const Text('Enviando...'),
+                  icon: const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2)),
+                )
+              : null),
     );
   }
 
@@ -138,9 +138,8 @@ class _ChamadaView extends StatelessWidget {
                         color: Colors.green,
                         isSelected: aluno.status == StatusPresenca.presente,
                         onTap: () {
-                          context
-                              .read<ChamadaCubit>()
-                              .marcarPresenca(aluno.id, StatusPresenca.presente);
+                          context.read<ChamadaCubit>().marcarPresenca(
+                              aluno.id, StatusPresenca.presente);
                         },
                       ),
                       const SizedBox(width: 8),
@@ -160,7 +159,7 @@ class _ChamadaView extends StatelessWidget {
                 );
               },
               separatorBuilder: (_, __) =>
-              const Divider(height: 0, indent: 16, endIndent: 16),
+                  const Divider(height: 0, indent: 16, endIndent: 16),
             ),
           ),
         ],
@@ -217,7 +216,7 @@ class _StatusBox extends StatelessWidget {
             Text(
               label,
               style:
-              TextStyle(color: isSelected ? Colors.white : Colors.black87),
+                  TextStyle(color: isSelected ? Colors.white : Colors.black87),
             ),
           ],
         ),
@@ -225,4 +224,3 @@ class _StatusBox extends StatelessWidget {
     );
   }
 }
-
