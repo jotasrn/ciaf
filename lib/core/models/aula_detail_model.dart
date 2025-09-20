@@ -4,12 +4,12 @@ import 'package:escolinha_futebol_app/core/models/aluno_chamada_model.dart';
 class AulaDetailModel extends Equatable {
   final DateTime data;
   final List<AlunoChamadaModel> alunos;
-  final String status; // ✅ CAMPO ADICIONADO
+  final String status;
 
   const AulaDetailModel({
     required this.data,
     required this.alunos,
-    required this.status, // ✅ CAMPO ADICIONADO
+    required this.status,
   });
 
   @override

@@ -11,10 +11,47 @@ class ChamadaCubit extends Cubit<ChamadaState> {
   Future<void> fetchAlunos(String aulaId) async {
     emit(const ChamadaLoading());
     try {
-      final alunos = await _aulaRepository.getAlunosParaChamada(aulaId);
-      emit(ChamadaSuccess(alunos: alunos));
+      final aulaDetails = await _aulaRepository.getAulaDetails(aulaId);
+      emit(ChamadaSuccess(
+        alunos: aulaDetails.alunos,
+        aulaData: aulaDetails.data,
+      ));
     } catch (e) {
-      emit(ChamadaFailure(message: e.toString().replaceAll('Exception: ', '')));
+      emit(ChamadaFailure(e.toString()));
+    }
+  }
+
+  void marcarPresenca(String alunoId, StatusPresenca status) {
+    final currentState = state;
+    if (currentState is ChamadaSuccess) {
+      final updatedAlunos = currentState.alunos.map((aluno) {
+        if (aluno.id == alunoId) {
+          return aluno.copyWith(status: status);
+        }
+        return aluno;
+      }).toList();
+      emit(ChamadaSuccess(
+          alunos: updatedAlunos, aulaData: currentState.aulaData));
+    }
+  }
+
+  Future<void> submeterChamada(String aulaId) async {
+    final currentState = state;
+    if (currentState is ChamadaSuccess) {
+      emit(ChamadaSubmitting(
+          alunos: currentState.alunos, aulaData: currentState.aulaData));
+      try {
+        final presencas = currentState.alunos
+            .map((aluno) => {
+          'aluno_id': aluno.id,
+          'status': aluno.status.toString().split('.').last,
+        })
+            .toList();
+        await _aulaRepository.submeterChamada(aulaId, presencas);
+        emit(const ChamadaSubmitSuccess());
+      } catch (e) {
+        emit(ChamadaFailure(e.toString()));
+      }
     }
   }
 
@@ -26,7 +63,6 @@ class ChamadaCubit extends Cubit<ChamadaState> {
     final currentState = state;
     if (currentState is ChamadaSuccess) {
       try {
-        // ✅ CORREÇÃO: Chama o método que agora existe no repositório.
         await _aulaRepository.marcarPresenca(
           aulaId: aulaId,
           alunoId: alunoId,
@@ -40,14 +76,12 @@ class ChamadaCubit extends Cubit<ChamadaState> {
           return aluno;
         }).toList();
 
-        // ✅ CORREÇÃO: Usa o construtor nomeado correto.
-        emit(ChamadaSuccess(alunos: alunosAtualizados));
+        emit(ChamadaSuccess(
+            alunos: alunosAtualizados, aulaData: currentState.aulaData));
       } catch (e) {
-        // ✅ CORREÇÃO: Usa o construtor nomeado correto.
-        emit(ChamadaFailure(
-            message:
-                'Falha ao salvar: ${e.toString().replaceAll('Exception: ', '')}'));
+        emit(ChamadaFailure('Falha ao salvar: ${e.toString().replaceAll('Exception: ', '')}'));
       }
     }
   }
 }
+

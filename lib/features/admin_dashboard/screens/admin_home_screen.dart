@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:escolinha_futebol_app/core/models/sport_model.dart';
+import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/dashboard_repository.dart';
 import 'package:escolinha_futebol_app/core/repositories/sport_repository.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/cubit/dashboard_cubit.dart';
@@ -19,12 +20,13 @@ class AdminHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A tela agora cria todos os Cubits que ela precisa
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           create: (context) => DashboardCubit(
+            // ✅ CORRIGIDO: O Cubit agora recebe os dois repositórios
             RepositoryProvider.of<DashboardRepository>(context),
+            RepositoryProvider.of<AulaRepository>(context),
           )..fetchSummary(),
         ),
         BlocProvider(
@@ -102,35 +104,30 @@ class AdminHomeScreen extends StatelessWidget {
 
 class _KpiSection extends StatelessWidget {
   const _KpiSection();
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DashboardCubit, DashboardState>(
       builder: (context, state) {
         if (state is DashboardSuccess) {
           return Wrap(
-            spacing: 16.0,
-            runSpacing: 16.0,
+            spacing: 16.0, runSpacing: 16.0,
             children: [
               KpiCard(
                 title: 'Total de Alunos',
                 value: state.totalAlunos.toString(),
-                icon: Icons.group,
-                color: Colors.blue,
+                icon: Icons.group, color: Colors.blue,
                 onTap: () => context.read<NavigationCubit>().selectPage(2),
               ),
               KpiCard(
                 title: 'Turmas',
                 value: state.totalTurmas.toString(),
-                icon: Icons.sports_soccer,
-                color: Colors.orange,
+                icon: Icons.sports_soccer, color: Colors.orange,
                 onTap: () => context.read<NavigationCubit>().selectPage(4),
               ),
               KpiCard(
                 title: 'Não Pagantes',
                 value: state.totalNaoPagantes.toString(),
-                icon: Icons.money_off,
-                color: Colors.red,
+                icon: Icons.money_off, color: Colors.red,
                 onTap: () {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const AlunoListScreen(
@@ -153,16 +150,22 @@ class _ChamadasSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 400,
-      child: ChamadasDoDiaWidget(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Chamadas do Dia', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        const SizedBox(
+          height: 400,
+          child: ChamadasDoDiaWidget(),
+        ),
+      ],
     );
   }
 }
 
 class _EsportesSection extends StatelessWidget {
   const _EsportesSection();
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -171,14 +174,11 @@ class _EsportesSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Navegar por Esportes',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text('Navegar por Esportes', style: Theme.of(context).textTheme.titleLarge),
             IconButton(
-              icon: Icon(Icons.add_circle,
-                  color: Theme.of(context).primaryColor),
+              icon: Icon(Icons.add_circle, color: Theme.of(context).primaryColor),
               onPressed: () async {
-                final novoEsporte = await showSimpleFormDialog(
-                    context: context, title: 'Adicionar Novo Esporte');
+                final novoEsporte = await showSimpleFormDialog(context: context, title: 'Adicionar Novo Esporte');
                 if (novoEsporte != null && novoEsporte.isNotEmpty) {
                   context.read<SportCubit>().createSport(nome: novoEsporte);
                 }
@@ -191,11 +191,8 @@ class _EsportesSection extends StatelessWidget {
           builder: (context, state) {
             if (state is SportLoadSuccess) {
               return Wrap(
-                spacing: 16.0,
-                runSpacing: 16.0,
-                children: state.sports
-                    .map((sport) => _buildSportCard(context, sport))
-                    .toList(),
+                spacing: 16.0, runSpacing: 16.0,
+                children: state.sports.map((sport) => _buildSportCard(context, sport)).toList(),
               );
             }
             return const Center(child: CircularProgressIndicator());
@@ -216,15 +213,13 @@ class _EsportesSection extends StatelessWidget {
     }
 
     return SizedBox(
-      width: 130,
-      height: 130,
+      width: 130, height: 130,
       child: Card(
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => CategorySelectionScreen(
-                  esporteId: sport.id, esporteNome: sport.nome),
+              builder: (_) => CategorySelectionScreen(esporteId: sport.id, esporteNome: sport.nome),
             ));
           },
           child: Column(
@@ -232,11 +227,7 @@ class _EsportesSection extends StatelessWidget {
             children: [
               Icon(iconData, color: Theme.of(context).primaryColor, size: 40),
               const SizedBox(height: 8),
-              Text(
-                sport.nome,
-                style: Theme.of(context).textTheme.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
+              Text(sport.nome, style: Theme.of(context).textTheme.bodyLarge, textAlign: TextAlign.center),
             ],
           ),
         ),
@@ -244,4 +235,3 @@ class _EsportesSection extends StatelessWidget {
     );
   }
 }
-

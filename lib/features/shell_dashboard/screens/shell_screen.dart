@@ -28,6 +28,7 @@ import 'package:escolinha_futebol_app/features/admin_dashboard/screens/sport_lis
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/turma_list_screen.dart';
 import 'package:escolinha_futebol_app/features/professor_dashboard/screens/professor_home_screen.dart';
 import 'package:escolinha_futebol_app/features/admin_dashboard/screens/category_list_screen.dart';
+import 'package:escolinha_futebol_app/core/repositories/aula_repository.dart';
 
 class ShellScreen extends StatelessWidget {
   const ShellScreen({super.key});
@@ -47,8 +48,10 @@ class ShellScreen extends StatelessWidget {
         // Provê todos os Cubits que o Admin pode precisar de uma só vez
         if (user.perfil == 'admin') ...[
           BlocProvider(
-            create: (context) =>
-                DashboardCubit(context.read<DashboardRepository>()),
+            create: (context) => DashboardCubit(
+              context.read<DashboardRepository>(),
+              context.read<AulaRepository>(),
+            ),
           ),
           BlocProvider(
             create: (context) =>

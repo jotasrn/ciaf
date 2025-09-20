@@ -214,8 +214,7 @@ class _TurmaDetailDialogContent extends StatelessWidget {
                   if (!context.mounted) return;
                   if (chamadaRealizada) {
                     await Navigator.of(context).push(MaterialPageRoute(
-                      // ✅ CORREÇÃO FINAL: Passa APENAS os parâmetros que a tela de chamada espera.
-                      builder: (_) => AdminChamadaScreen(
+                      builder: (_) => ChamadaScreen(
                         aulaId: aula.id,
                         turmaNome: aula.turmaNome,
                       ),
@@ -257,7 +256,7 @@ class _TurmaDetailDialogContent extends StatelessWidget {
                 onTap: () async {
                   if (!context.mounted) return;
                   await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => AdminChamadaScreen(
+                    builder: (_) => ChamadaScreen(
                       aulaId: aula.id,
                       turmaNome: aula.turmaNome,
                     ),
@@ -277,7 +276,6 @@ class _TurmaDetailDialogContent extends StatelessWidget {
 
   List<AulaResumoModel> _gerarAulasProjetadas(
       TurmaModel turma, List<AulaResumoModel> aulasExistentes) {
-    // ... a lógica desta função permanece a mesma, não precisa mudar.
     if (turma.horarios.isEmpty) return [];
     final diasDaSemana = {
       1: 'segunda',

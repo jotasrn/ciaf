@@ -66,59 +66,50 @@ class _ChamadaView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Chamada - $turmaNome')),
       body: _buildBody(context, currentState),
-      floatingActionButton: (currentState is ChamadaSuccess)
+      floatingActionButton: (currentState is ChamadaSuccess && currentState is! ChamadaSubmitting)
           ? FloatingActionButton.extended(
-              onPressed: () {
-                context.read<ChamadaCubit>().submeterChamada(aulaId);
-              },
-              label: const Text('Finalizar Chamada'),
-              icon: const Icon(Icons.check),
-            )
+        onPressed: () {
+          context.read<ChamadaCubit>().submeterChamada(aulaId);
+        },
+        label: const Text('Finalizar Chamada'),
+        icon: const Icon(Icons.check),
+      )
           : (currentState is ChamadaSubmitting
-              ? FloatingActionButton.extended(
-                  onPressed: null,
-                  label: const Text('Enviando...'),
-                  icon: const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2)),
-                )
-              : null),
+          ? FloatingActionButton.extended(
+        onPressed: null,
+        label: const Text('Enviando...'),
+        icon: const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+                color: Colors.white, strokeWidth: 2)),
+      )
+          : null),
     );
   }
 
   Widget _buildBody(BuildContext context, ChamadaState state) {
-    if (state is ChamadaLoading ||
-        state is ChamadaInitial ||
-        state is ChamadaSubmitting) {
+    if (state is ChamadaLoading || state is ChamadaInitial) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (state is ChamadaSuccess) {
+    if (state is ChamadaSuccess) { // ChamadaSubmitting também é um ChamadaSuccess
       if (state.alunos.isEmpty) {
-        return const Center(
-            child: Text('Nenhum aluno encontrado nesta turma.'));
+        return const Center(child: Text('Nenhum aluno encontrado nesta turma.'));
       }
       return Column(
         children: [
-          // Cabeçalho com a data correta
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: Card(
               child: ListTile(
-                leading: Icon(Icons.calendar_today,
-                    color: Theme.of(context).primaryColor),
-                title: Text(turmaNome,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                // Usa a 'aulaData' que agora vem do estado
-                subtitle: Text(
-                    'Data: ${DateFormat('dd/MM/yyyy').format(state.aulaData)}'),
+                leading: Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
+                title: Text(turmaNome, style: const TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text('Data: ${DateFormat('dd/MM/yyyy').format(state.aulaData)}'),
               ),
             ),
           ),
           const Divider(),
-          // Lista de alunos
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.only(bottom: 80),
@@ -126,8 +117,7 @@ class _ChamadaView extends StatelessWidget {
               itemBuilder: (context, index) {
                 final aluno = state.alunos[index];
                 return ListTile(
-                  leading: CircleAvatar(
-                      child: Text(aluno.nome.isNotEmpty ? aluno.nome[0] : '?')),
+                  leading: CircleAvatar(child: Text(aluno.nome.isNotEmpty ? aluno.nome[0] : '?')),
                   title: Text(aluno.nome),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -138,8 +128,7 @@ class _ChamadaView extends StatelessWidget {
                         color: Colors.green,
                         isSelected: aluno.status == StatusPresenca.presente,
                         onTap: () {
-                          context.read<ChamadaCubit>().marcarPresenca(
-                              aluno.id, StatusPresenca.presente);
+                          context.read<ChamadaCubit>().marcarPresenca(aluno.id, StatusPresenca.presente);
                         },
                       ),
                       const SizedBox(width: 8),
@@ -149,17 +138,14 @@ class _ChamadaView extends StatelessWidget {
                         color: Colors.red,
                         isSelected: aluno.status == StatusPresenca.ausente,
                         onTap: () {
-                          context
-                              .read<ChamadaCubit>()
-                              .marcarPresenca(aluno.id, StatusPresenca.ausente);
+                          context.read<ChamadaCubit>().marcarPresenca(aluno.id, StatusPresenca.ausente);
                         },
                       ),
                     ],
                   ),
                 );
               },
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 0, indent: 16, endIndent: 16),
+              separatorBuilder: (_, __) => const Divider(height: 0, indent: 16, endIndent: 16),
             ),
           ),
         ],
@@ -174,7 +160,6 @@ class _ChamadaView extends StatelessWidget {
   }
 }
 
-// WIDGET AUXILIAR PARA OS BOTÕES DE PRESENÇA (AS "CAIXAS")
 class _StatusBox extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -201,8 +186,7 @@ class _StatusBox extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? color : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: isSelected ? Colors.transparent : Colors.grey.shade400),
+          border: Border.all(color: isSelected ? Colors.transparent : Colors.grey.shade400),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -215,8 +199,7 @@ class _StatusBox extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style:
-                  TextStyle(color: isSelected ? Colors.white : Colors.black87),
+              style: TextStyle(color: isSelected ? Colors.white : Colors.black87),
             ),
           ],
         ),

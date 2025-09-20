@@ -13,11 +13,8 @@ class AulaRepository {
     final formatoData = DateFormat('yyyy-MM-dd');
     final dataString = formatoData.format(data);
     try {
-      final response = await _apiService.dio
-          .get('/aulas/por-data', queryParameters: {'data': dataString});
-      return (response.data as List)
-          .map((json) => AulaResumoModel.fromJson(json))
-          .toList();
+      final response = await _apiService.dio.get('/aulas/por-data', queryParameters: {'data': dataString});
+      return (response.data as List).map((json) => AulaResumoModel.fromJson(json)).toList();
     } on DioException {
       throw Exception('Falha ao buscar as aulas do dia.');
     }
@@ -26,9 +23,7 @@ class AulaRepository {
   Future<List<AulaResumoModel>> getAulasByTurma(String turmaId) async {
     try {
       final response = await _apiService.dio.get('/aulas/turma/$turmaId');
-      return (response.data as List)
-          .map((json) => AulaResumoModel.fromJson(json))
-          .toList();
+      return (response.data as List).map((json) => AulaResumoModel.fromJson(json)).toList();
     } on DioException {
       throw Exception('Falha ao buscar as aulas da turma.');
     }
@@ -38,14 +33,9 @@ class AulaRepository {
     try {
       final response = await _apiService.dio.get('/aulas/$aulaId/detalhes');
       final responseData = response.data as Map<String, dynamic>;
-      final alunos = (responseData['alunos'] as List)
-          .map((json) => AlunoChamadaModel.fromJson(json))
-          .toList();
+      final alunos = (responseData['alunos'] as List).map((json) => AlunoChamadaModel.fromJson(json)).toList();
       final data = DateTime.parse(responseData['data']['\$date']);
-      return AulaDetailModel(
-          data: data,
-          alunos: alunos,
-          status: responseData['status'] ?? 'Agendada');
+      return AulaDetailModel(data: data, alunos: alunos, status: responseData['status'] ?? 'Agendada');
     } on DioException {
       throw Exception('Falha ao buscar detalhes da aula.');
     }
@@ -62,23 +52,35 @@ class AulaRepository {
     }
   }
 
-  Future<void> submeterChamada(
-      String aulaId, List<Map<String, String>> presencas) async {
+  Future<void> marcarPresenca({
+    required String aulaId,
+    required String alunoId,
+    required StatusPresenca status,
+  }) async {
+    try {
+      await _apiService.dio.post('/presencas/marcar', data: {
+        'aula_id': aulaId,
+        'aluno_id': alunoId,
+        'status': status.toString().split('.').last,
+      });
+    } on DioException catch (e) {
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao marcar presença.');
+    }
+  }
+
+  Future<void> submeterChamada(String aulaId, List<Map<String, String>> presencas) async {
     try {
       await _apiService.dio.post('/aulas/$aulaId/presencas', data: presencas);
     } on DioException catch (e) {
-      throw Exception(
-          e.response?.data['mensagem'] ?? 'Falha ao submeter chamada.');
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao submeter chamada.');
     }
   }
 
   Future<void> agendarAulas(String turmaId) async {
     try {
-      await _apiService.dio
-          .post('/aulas/agendar-mes', data: {'turma_id': turmaId});
+      await _apiService.dio.post('/aulas/agendar-mes', data: {'turma_id': turmaId});
     } on DioException catch (e) {
-      throw Exception(
-          e.response?.data['mensagem'] ?? 'Falha ao agendar aulas.');
+      throw Exception(e.response?.data['mensagem'] ?? 'Falha ao agendar aulas.');
     }
   }
 }

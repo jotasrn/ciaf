@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:escolinha_futebol_app/core/models/aula_resumo_model.dart';
 
 abstract class DashboardState extends Equatable {
   const DashboardState();
@@ -7,15 +8,26 @@ abstract class DashboardState extends Equatable {
 }
 
 class DashboardInitial extends DashboardState {}
+
 class DashboardLoading extends DashboardState {}
+
 class DashboardSuccess extends DashboardState {
   final int totalAlunos;
   final int totalTurmas;
   final int totalNaoPagantes;
-  const DashboardSuccess({required this.totalAlunos, required this.totalTurmas, required this.totalNaoPagantes,});
+  final List<AulaResumoModel> aulasDoDia;
+
+  const DashboardSuccess({
+    required this.totalAlunos,
+    required this.totalTurmas,
+    required this.totalNaoPagantes,
+    required this.aulasDoDia,
+  });
+
   @override
-  List<Object> get props => [totalAlunos, totalTurmas,totalNaoPagantes];
+  List<Object> get props => [totalAlunos, totalTurmas, totalNaoPagantes, aulasDoDia];
 }
+
 class DashboardFailure extends DashboardState {
   final String message;
   const DashboardFailure(this.message);
